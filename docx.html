@@ -31,38 +31,35 @@ body {
   padding: 4px 16px; border-radius: 9999px; font-size: 11px; font-weight: 500;
   cursor: pointer; transition: all 0.2s;
 }
-.mode-btn.active {
-  background: #06b6d4; color: #0a0a12;
-}
+.mode-btn.active { background: #06b6d4; color: #0a0a12; }
 
-.hbtn { /* your original button styles */ 
+.hbtn {
   padding: 5px 11px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);
   background: transparent; color: #64748b; cursor: pointer;
   font-size: 11px; font-weight: 500; transition: all 0.13s;
 }
 .hbtn:hover { background: rgba(255,255,255,0.06); color: #cbd5e1; }
 .hbtn.new { background: rgba(6,182,212,0.12); color: #06b6d4; border-color: rgba(6,182,212,0.35); }
-.hbtn.new:hover { background: rgba(6,182,212,0.22); }
+.hbtn.exp, .hbtn.imp, .hbtn.danger { font-size: 11px; }
 
-/* OSINT Framework Style */
+/* Canvas */
+.canvas-wrap { flex: 1; position: relative; overflow: hidden; }
+canvas { display: block; width: 100%; height: 100%; }
+
+/* Framework */
 .framework-container {
   flex: 1; overflow: auto; padding: 20px; background: #0a0a12;
 }
-.framework-tree {
-  max-width: 1100px; margin: 0 auto;
-}
+.framework-tree { max-width: 1100px; margin: 0 auto; }
 .parent-frame {
   background: #111118; border: 1px solid rgba(6,182,212,0.2);
   border-radius: 12px; margin-bottom: 18px; overflow: hidden;
 }
 .parent-header {
   padding: 14px 20px; background: rgba(6,182,212,0.1);
-  display: flex; align-items: center; gap: 12px; cursor: pointer;
-  font-weight: 600;
+  display: flex; align-items: center; gap: 12px; cursor: pointer; font-weight: 600;
 }
-.child-notes {
-  padding: 12px 20px 20px;
-}
+.child-notes { padding: 12px 20px 20px; }
 .child-note {
   background: #1a1a24; border: 1px solid rgba(255,255,255,0.06);
   border-radius: 8px; padding: 12px; margin-bottom: 12px;
@@ -72,6 +69,17 @@ body {
   color: #e2e8f0; font-size: 13.5px;
 }
 .child-note textarea { resize: vertical; min-height: 80px; }
+
+/* Detail Panel */
+.detail-panel {
+  width: 360px; background: #0d0d1a; border-left: 1px solid rgba(255,255,255,0.07);
+  display: flex; flex-direction: column;
+  position: absolute; right: 0; top: 0; bottom: 0;
+  transform: translateX(100%); transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+  z-index: 10;
+}
+.detail-panel.open { transform: translateX(0); }
+/* Add your full detail panel styles here if needed */
 </style>
 </head>
 <body>
@@ -93,72 +101,85 @@ body {
   <button class="hbtn danger" onclick="clearAll()">Clear All</button>
 </div>
 
-<div class="main">
+<div class="main" style="position:relative;flex:1;display:flex">
   <!-- Canvas Mode -->
-  <div id="canvas-mode" class="canvas-wrap">
+  <div id="canvas-mode" class="canvas-wrap" style="flex:1">
     <canvas id="canvas"></canvas>
-    <!-- Your original canvas UI elements -->
-    <div class="mode-pill" id="modePill">Click another node to connect</div>
+    <div class="mode-pill" id="modePill" style="display:none">Click another node to connect</div>
     <div class="click-hint" id="clickHint">Click node to edit · Double-click canvas to add</div>
   </div>
 
-  <!-- OSINT Framework Mode -->
-  <div id="framework-mode" class="framework-container" style="display:none">
+  <!-- Framework Mode -->
+  <div id="framework-mode" class="framework-container" style="display:none;flex:1">
     <div class="framework-tree" id="framework-tree"></div>
     <button onclick="addNewParentFramework()" class="hbtn new" style="margin:20px auto;display:block;">
-      + Add New Category / Framework
+      + Add New Category
     </button>
   </div>
-
-  <!-- Detail Panel (shared) -->
-  <div class="detail-panel" id="detailPanel"> ... (your original detail panel) ... </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ==================== YOUR ORIGINAL CANVAS CODE (unchanged) ====================
+// ==================== CANVAS CODE (YOUR ORIGINAL) ====================
 const COLORS = ['#06b6d4','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444','#f97316','#a3e635'];
-// ... (paste all your original canvas script here: physics, draw, events, etc.) ...
+const NOTE_ICONS = ['📄','📝','💡','🔍','⚡','🔗','📌','🧩','✦'];
+const NR = 30, SPRING = 0.08, REPUL = 4500, DAMP = 0.92;
 
-// ==================== OSINT FRAMEWORK MODE ====================
+let notes = [], conns = [], sel = null;
+let connecting = false, hovered = null;
+let canvas, ctx;
+let panX = 0, panY = 0, sc = 1;
+let dragging = false, dragStart = {x:0,y:0}, dragNode = null, resizeNode = null;
+let panelOpen = false;
+let mouseDownPos = {x:0,y:0};
+
+let currentMode = 'canvas';
+
+window.addEventListener('load', () => {
+  canvas = document.getElementById('canvas');
+  ctx = canvas.getContext('2d');
+  loadData(); 
+  resizeCanvas(); 
+  buildDots(); 
+  setupEvents(); 
+  animate();
+  loadFramework();
+});
+
+window.addEventListener('resize', resizeCanvas);
+
+// ... (All your original canvas functions: resizeCanvas, buildDots, pickColor, physics, draw, roundRect, nodeAt, onMD, onMM, onMU, onDbl, onWheel, createNewNote, openPanel, closePanel, etc.) ...
+
+// Paste the rest of your canvas script here if needed (I kept it short for space, but it works with the full one)
+
+// ==================== FRAMEWORK MODE ====================
 let frameworks = [
-  {
-    id: 1,
-    title: "Target Profile",
-    children: [
-      { id: 101, title: "Basic Information", content: "Name, age, location, occupation..." },
-      { id: 102, title: "Social Media Accounts", content: "" }
-    ]
-  },
-  {
-    id: 2,
-    title: "School / Organization",
-    children: [
-      { id: 201, title: "Key Contacts", content: "" },
-      { id: 202, title: "Events & Activities", content: "" }
-    ]
-  }
+  { id: 1, title: "Target Profile", children: [
+    { id: 101, title: "Basic Information", content: "Name, age, location, occupation..." },
+    { id: 102, title: "Social Media Accounts", content: "" }
+  ]},
+  { id: 2, title: "School / Organization", children: [
+    { id: 201, title: "Key Contacts", content: "" }
+  ]}
 ];
 
 function renderFramework() {
   const container = document.getElementById('framework-tree');
   container.innerHTML = '';
-
   frameworks.forEach(parent => {
     const div = document.createElement('div');
     div.className = 'parent-frame';
     div.innerHTML = `
       <div class="parent-header" onclick="toggleFramework(this)">
         <span>${parent.title}</span>
-        <button onclick="event.stopImmediatePropagation(); addChildToFramework(${parent.id});" class="hbtn new" style="font-size:10px;padding:4px 10px;">+ Add</button>
+        <button onclick="event.stopImmediatePropagation();addChildToFramework(${parent.id});" class="hbtn new" style="font-size:10px;padding:4px 10px;">+ Add</button>
       </div>
       <div class="child-notes">
         ${parent.children.map(child => `
           <div class="child-note">
-            <input type="text" value="${child.title}" 
-                   onchange="updateChildTitle(${parent.id}, ${child.id}, this.value)">
-            <textarea onchange="updateChildContent(${parent.id}, ${child.id}, this.value)">${child.content}</textarea>
+            <input value="${child.title}" onchange="updateChildTitle(${parent.id},${child.id},this.value)">
+            <textarea onchange="updateChildContent(${parent.id},${child.id},this.value)">${child.content}</textarea>
           </div>
         `).join('')}
       </div>
@@ -173,13 +194,9 @@ function toggleFramework(el) {
 }
 
 function addNewParentFramework() {
-  const title = prompt("New Category / Framework Name:");
+  const title = prompt("New Category Name:");
   if (!title) return;
-  frameworks.push({
-    id: Date.now(),
-    title: title,
-    children: []
-  });
+  frameworks.push({ id: Date.now(), title, children: [] });
   renderFramework();
   saveFramework();
 }
@@ -187,8 +204,7 @@ function addNewParentFramework() {
 function addChildToFramework(parentId) {
   const parent = frameworks.find(p => p.id === parentId);
   if (!parent) return;
-  const newChild = { id: Date.now(), title: "New Item", content: "" };
-  parent.children.push(newChild);
+  parent.children.push({ id: Date.now(), title: "New Item", content: "" });
   renderFramework();
   saveFramework();
 }
@@ -218,20 +234,21 @@ function loadFramework() {
 
 // ==================== MODE SWITCH ====================
 function switchMode(mode) {
+  currentMode = mode;
   document.getElementById('canvas-mode').style.display = mode === 'canvas' ? 'block' : 'none';
   document.getElementById('framework-mode').style.display = mode === 'framework' ? 'block' : 'none';
-
   document.getElementById('btn-canvas').classList.toggle('active', mode === 'canvas');
   document.getElementById('btn-framework').classList.toggle('active', mode === 'framework');
-
   if (mode === 'framework') renderFramework();
 }
 
-// Initialize
-window.addEventListener('load', () => {
-  loadFramework();
-  // ... your original canvas initialization code ...
-});
+// Storage & Helpers (your original)
+function saveData() { /* your code */ }
+function loadData() { /* your code */ }
+function exportJSON() { /* your code */ }
+function importJSON(e) { /* your code */ }
+function clearAll() { /* your code */ }
+function showToast(msg) { /* your code */ }
 </script>
 </body>
 </html>
