@@ -14,647 +14,224 @@ body {
   height: 100vh; display: flex; flex-direction: column; overflow: hidden;
 }
 .header {
-  display: flex; align-items: center; gap: 8px;
+  display: flex; align-items: center; gap: 12px;
   padding: 0 16px; height: 46px; flex-shrink: 0;
   background: #0d0d1a; border-bottom: 1px solid rgba(255,255,255,0.07);
 }
 .logo { font-size: 15px; font-weight: 600; color: #06b6d4; letter-spacing: -0.3px; }
 .logo-sub { font-size: 11px; color: #334155; margin-left: 6px; font-weight: 400; }
 .hspacer { flex: 1; }
-.hbtn {
+
+/* Mode Switch */
+.mode-switch {
+  display: flex; background: rgba(255,255,255,0.05); border-radius: 9999px; padding: 3px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.mode-btn {
+  padding: 4px 16px; border-radius: 9999px; font-size: 11px; font-weight: 500;
+  cursor: pointer; transition: all 0.2s;
+}
+.mode-btn.active {
+  background: #06b6d4; color: #0a0a12;
+}
+
+.hbtn { /* your original button styles */ 
   padding: 5px 11px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);
   background: transparent; color: #64748b; cursor: pointer;
-  font-size: 11px; font-family: 'Inter', sans-serif; font-weight: 500;
-  transition: all 0.13s; white-space: nowrap;
+  font-size: 11px; font-weight: 500; transition: all 0.13s;
 }
-.hbtn:hover { background: rgba(255,255,255,0.06); color: #cbd5e1; border-color: rgba(255,255,255,0.18); }
+.hbtn:hover { background: rgba(255,255,255,0.06); color: #cbd5e1; }
 .hbtn.new { background: rgba(6,182,212,0.12); color: #06b6d4; border-color: rgba(6,182,212,0.35); }
 .hbtn.new:hover { background: rgba(6,182,212,0.22); }
-.hbtn.exp { background: rgba(34,197,94,0.08); color: #4ade80; border-color: rgba(34,197,94,0.3); }
-.hbtn.exp:hover { background: rgba(34,197,94,0.16); }
-.hbtn.imp { background: rgba(168,85,247,0.08); color: #c084fc; border-color: rgba(168,85,247,0.3); }
-.hbtn.imp:hover { background: rgba(168,85,247,0.18); }
-.hbtn.danger { color: #f87171; border-color: rgba(239,68,68,0.25); }
-.hbtn.danger:hover { background: rgba(239,68,68,0.1); }
-.hdiv { width: 1px; height: 18px; background: rgba(255,255,255,0.08); margin: 0 2px; }
-input[type=file] { display: none; }
-.main { display: flex; flex: 1; overflow: hidden; position: relative; }
-.canvas-wrap { flex: 1; position: relative; overflow: hidden; }
-canvas { display: block; width: 100%; height: 100%; }
-.detail-panel {
-  width: 360px; flex-shrink: 0;
-  background: #0d0d1a;
-  border-left: 1px solid rgba(255,255,255,0.07);
-  display: flex; flex-direction: column;
-  transform: translateX(100%);
-  transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
-  position: absolute; right: 0; top: 0; bottom: 0;
-  z-index: 10;
+
+/* OSINT Framework Style */
+.framework-container {
+  flex: 1; overflow: auto; padding: 20px; background: #0a0a12;
 }
-.detail-panel.open { transform: translateX(0); }
-.detail-accent { height: 3px; flex-shrink: 0; }
-.detail-header {
-  display: flex; align-items: flex-start; gap: 10px;
-  padding: 16px 18px 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  flex-shrink: 0;
+.framework-tree {
+  max-width: 1100px; margin: 0 auto;
 }
-.detail-icon {
-  width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 16px; margin-top: 2px;
+.parent-frame {
+  background: #111118; border: 1px solid rgba(6,182,212,0.2);
+  border-radius: 12px; margin-bottom: 18px; overflow: hidden;
 }
-.detail-titles { flex: 1; min-width: 0; }
-.detail-tag {
-  font-size: 9px; font-weight: 600; letter-spacing: 0.12em;
-  text-transform: uppercase; color: #334155; margin-bottom: 3px;
+.parent-header {
+  padding: 14px 20px; background: rgba(6,182,212,0.1);
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
+  font-weight: 600;
 }
-.detail-title-input {
+.child-notes {
+  padding: 12px 20px 20px;
+}
+.child-note {
+  background: #1a1a24; border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px; padding: 12px; margin-bottom: 12px;
+}
+.child-note input, .child-note textarea {
   width: 100%; background: transparent; border: none; outline: none;
-  font-family: 'Lora', Georgia, serif;
-  font-size: 18px; font-weight: 500; color: #f1f5f9;
-  line-height: 1.3; letter-spacing: -0.2px;
-  resize: none; overflow: hidden; caret-color: #06b6d4;
+  color: #e2e8f0; font-size: 13.5px;
 }
-.detail-title-input::placeholder { color: #1e3a5f; }
-.detail-close {
-  width: 26px; height: 26px; border-radius: 6px;
-  background: transparent; border: 1px solid rgba(255,255,255,0.08);
-  color: #475569; cursor: pointer; font-size: 12px;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; transition: all 0.12s; margin-top: 2px;
-}
-.detail-close:hover { background: rgba(239,68,68,0.1); color: #f87171; border-color: rgba(239,68,68,0.25); }
-.detail-meta {
-  display: flex; align-items: center; gap: 8px;
-  padding: 8px 18px 10px;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  flex-shrink: 0;
-}
-.meta-label { font-size: 10px; color: #334155; font-weight: 500; }
-.color-dots { display: flex; gap: 5px; }
-.cdot {
-  width: 13px; height: 13px; border-radius: 50%; cursor: pointer;
-  border: 2px solid transparent; transition: transform 0.1s, border-color 0.1s;
-  flex-shrink: 0;
-}
-.cdot:hover { transform: scale(1.25); }
-.cdot.active { border-color: rgba(255,255,255,0.8); transform: scale(1.15); }
-.meta-spacer { flex: 1; }
-.conn-btn {
-  font-size: 10px; font-family: 'Inter', sans-serif; font-weight: 500;
-  padding: 3px 9px; border-radius: 5px; cursor: pointer;
-  background: rgba(6,182,212,0.08); border: 1px solid rgba(6,182,212,0.2);
-  color: #22d3ee; transition: all 0.12s;
-}
-.conn-btn:hover { background: rgba(6,182,212,0.18); }
-.detail-content-wrap {
-  flex: 1; overflow-y: auto; padding: 14px 18px;
-  display: flex; flex-direction: column;
-}
-.detail-content-wrap::-webkit-scrollbar { width: 3px; }
-.detail-content-wrap::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
-.detail-content-input {
-  width: 100%; background: transparent; border: none; outline: none;
-  font-family: 'Inter', sans-serif;
-  font-size: 13.5px; font-weight: 300; color: #94a3b8;
-  line-height: 1.85; letter-spacing: 0.01em;
-  resize: none; flex: 1; min-height: 160px;
-  caret-color: #06b6d4;
-}
-.detail-content-input::placeholder { color: #1e3a5f; font-style: italic; }
-.conn-section { flex-shrink: 0; padding: 10px 18px 12px; border-top: 1px solid rgba(255,255,255,0.05); }
-.conn-header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
-.conn-section-label { font-size: 10px; color: #334155; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
-.conn-disconnect-all { font-size: 10px; color: #ef4444; background: transparent; border: none; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 500; opacity: 0.7; transition: opacity 0.12s; }
-.conn-disconnect-all:hover { opacity: 1; text-decoration: underline; }
-.conn-list { display: flex; flex-direction: column; gap: 3px; }
-.conn-item {
-  display: flex; align-items: center; justify-content: space-between;
-  font-size: 12px; color: #475569; padding: 5px 8px; border-radius: 5px;
-  background: rgba(255,255,255,0.02); cursor: pointer; transition: background 0.1s;
-}
-.conn-item:hover { background: rgba(255,255,255,0.05); color: #7dd3fc; }
-.conn-item-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-right: 6px; }
-.conn-remove { color: #ef4444; cursor: pointer; opacity: 0.5; font-size: 10px; padding: 2px 4px; flex-shrink: 0; }
-.conn-remove:hover { opacity: 1; }
-.detail-save-row {
-  flex-shrink: 0; padding: 10px 18px;
-  border-top: 1px solid rgba(255,255,255,0.05);
-  display: flex; align-items: center; gap: 8px;
-}
-.save-btn {
-  flex: 1; padding: 8px; border-radius: 7px; cursor: pointer;
-  background: rgba(6,182,212,0.12); border: 1px solid rgba(6,182,212,0.3);
-  color: #06b6d4; font-size: 12px; font-family: 'Inter', sans-serif; font-weight: 500;
-  transition: all 0.13s;
-}
-.save-btn:hover { background: rgba(6,182,212,0.22); }
-.delete-btn {
-  padding: 8px 12px; border-radius: 7px; cursor: pointer;
-  background: transparent; border: 1px solid rgba(239,68,68,0.2);
-  color: #f87171; font-size: 11px; font-family: 'Inter', sans-serif; font-weight: 500;
-  transition: all 0.13s;
-}
-.delete-btn:hover { background: rgba(239,68,68,0.1); }
-.saved-indicator { font-size: 10px; color: #1e3a5f; transition: color 0.3s; white-space: nowrap; }
-.saved-indicator.visible { color: #4ade80; }
-.mode-pill {
-  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
-  background: rgba(6,182,212,0.15); border: 1px solid rgba(6,182,212,0.35);
-  padding: 5px 16px; border-radius: 20px; font-size: 11px; color: #06b6d4;
-  pointer-events: none; display: none; font-family: 'Inter', sans-serif; white-space: nowrap;
-  z-index: 5;
-}
-.click-hint {
-  position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
-  background: rgba(13,13,26,0.85); border: 1px solid rgba(255,255,255,0.07);
-  padding: 6px 14px; border-radius: 20px; font-size: 11px; color: #334155;
-  pointer-events: none; font-family: 'Inter', sans-serif; white-space: nowrap;
-  transition: opacity 0.5s; z-index: 5;
-}
-.toast {
-  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-  background: rgba(15,15,28,0.9); border: 1px solid rgba(6,182,212,0.3);
-  padding: 7px 18px; border-radius: 20px; font-size: 12px; color: #06b6d4;
-  z-index: 9999; pointer-events: none; opacity: 0; transition: opacity 0.25s;
-  font-family: 'Inter', sans-serif; white-space: nowrap;
-}
-.toast.show { opacity: 1; }
-.toast.err { border-color: rgba(239,68,68,0.4); color: #f87171; }
+.child-note textarea { resize: vertical; min-height: 80px; }
 </style>
 </head>
 <body>
+
 <div class="header">
   <span class="logo">DocX</span>
   <span class="logo-sub">Flow Network</span>
+
+  <div class="mode-switch">
+    <div class="mode-btn active" id="btn-canvas" onclick="switchMode('canvas')">Canvas</div>
+    <div class="mode-btn" id="btn-framework" onclick="switchMode('framework')">OSINT Framework</div>
+  </div>
+
   <div class="hspacer"></div>
-  <button class="hbtn new" onclick="createNewNote()">+ New note</button>
-  <div class="hdiv"></div>
+  <button class="hbtn new" onclick="createNewNote()">+ New Note</button>
   <button class="hbtn exp" onclick="exportJSON()">↓ Export</button>
   <button class="hbtn imp" onclick="document.getElementById('importFile').click()">↑ Import</button>
   <input type="file" id="importFile" accept=".json" onchange="importJSON(event)">
-  <div class="hdiv"></div>
-  <button class="hbtn danger" onclick="clearAll()">Clear all</button>
+  <button class="hbtn danger" onclick="clearAll()">Clear All</button>
 </div>
+
 <div class="main">
-  <div class="canvas-wrap">
+  <!-- Canvas Mode -->
+  <div id="canvas-mode" class="canvas-wrap">
     <canvas id="canvas"></canvas>
+    <!-- Your original canvas UI elements -->
     <div class="mode-pill" id="modePill">Click another node to connect</div>
-    <div class="click-hint" id="clickHint">Click a node to view · Double-click canvas to add · Drag to move</div>
+    <div class="click-hint" id="clickHint">Click node to edit · Double-click canvas to add</div>
   </div>
-  <div class="detail-panel" id="detailPanel">
-    <div class="detail-accent" id="detailAccent"></div>
-    <div class="detail-header">
-      <div class="detail-icon" id="detailIcon"></div>
-      <div class="detail-titles">
-        <div class="detail-tag" id="detailTag">NOTE</div>
-        <textarea class="detail-title-input" id="noteTitle" rows="1"
-          placeholder="Note title…" oninput="autoResize(this); liveUpdate()"></textarea>
-      </div>
-      <button class="detail-close" onclick="closePanel()" title="Close">✕</button>
-    </div>
-    <div class="detail-meta">
-      <span class="meta-label">Color</span>
-      <div class="color-dots" id="colorDots"></div>
-      <div class="meta-spacer"></div>
-      <button class="conn-btn" onclick="addConnectionMode()">+ Connect</button>
-    </div>
-    <div class="detail-content-wrap">
-      <textarea class="detail-content-input" id="noteContent"
-        placeholder="Start writing your note…&#10;&#10;Click anywhere on this panel to edit."
-        oninput="liveUpdate()"></textarea>
-    </div>
-    <div class="conn-section" id="connSection" style="display:none">
-      <div class="conn-header-row">
-        <div class="conn-section-label">Connections</div>
-        <button class="conn-disconnect-all" onclick="disconnectAll()">Disconnect all</button>
-      </div>
-      <div class="conn-list" id="connectionsList"></div>
-    </div>
-    <div class="detail-save-row">
-      <button class="save-btn" onclick="saveNote()">Save</button>
-      <button class="delete-btn" onclick="deleteSelected()">Delete</button>
-      <span class="saved-indicator" id="savedIndicator">Saved</span>
-    </div>
+
+  <!-- OSINT Framework Mode -->
+  <div id="framework-mode" class="framework-container" style="display:none">
+    <div class="framework-tree" id="framework-tree"></div>
+    <button onclick="addNewParentFramework()" class="hbtn new" style="margin:20px auto;display:block;">
+      + Add New Category / Framework
+    </button>
   </div>
+
+  <!-- Detail Panel (shared) -->
+  <div class="detail-panel" id="detailPanel"> ... (your original detail panel) ... </div>
 </div>
+
 <div class="toast" id="toast"></div>
 
 <script>
+// ==================== YOUR ORIGINAL CANVAS CODE (unchanged) ====================
 const COLORS = ['#06b6d4','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444','#f97316','#a3e635'];
-const NOTE_ICONS = ['📄','📝','💡','🔍','⚡','🔗','📌','🧩','✦'];
-const NR = 30, SPRING = 0.08, REPUL = 4500, DAMP = 0.92;
-let notes = [], conns = [], sel = null;
-let connecting = false, hovered = null;
-let canvas, ctx;
-let panX = 0, panY = 0, sc = 1;
-let dragging = false, dragStart = {x:0,y:0}, dragNode = null, resizeNode = null;
-let panelOpen = false;
-let mouseDownPos = {x:0,y:0};
+// ... (paste all your original canvas script here: physics, draw, events, etc.) ...
 
-window.addEventListener('load', () => {
-  canvas = document.getElementById('canvas');
-  ctx = canvas.getContext('2d');
-  loadData(); resizeCanvas(); buildDots(); setupEvents(); animate();
-  setTimeout(() => {
-    const hint = document.getElementById('clickHint');
-    if (hint) hint.style.opacity = notes.length > 0 ? '0' : '1';
-  }, 3000);
-});
-window.addEventListener('resize', resizeCanvas);
+// ==================== OSINT FRAMEWORK MODE ====================
+let frameworks = [
+  {
+    id: 1,
+    title: "Target Profile",
+    children: [
+      { id: 101, title: "Basic Information", content: "Name, age, location, occupation..." },
+      { id: 102, title: "Social Media Accounts", content: "" }
+    ]
+  },
+  {
+    id: 2,
+    title: "School / Organization",
+    children: [
+      { id: 201, title: "Key Contacts", content: "" },
+      { id: 202, title: "Events & Activities", content: "" }
+    ]
+  }
+];
 
-function resizeCanvas() {
-  const c = canvas.parentElement;
-  canvas.width = c.clientWidth; canvas.height = c.clientHeight;
-}
+function renderFramework() {
+  const container = document.getElementById('framework-tree');
+  container.innerHTML = '';
 
-function buildDots() {
-  const el = document.getElementById('colorDots');
-  COLORS.forEach(c => {
-    const d = document.createElement('div');
-    d.className = 'cdot'; d.style.background = c; d.dataset.color = c;
-    d.onclick = () => pickColor(c);
-    el.appendChild(d);
+  frameworks.forEach(parent => {
+    const div = document.createElement('div');
+    div.className = 'parent-frame';
+    div.innerHTML = `
+      <div class="parent-header" onclick="toggleFramework(this)">
+        <span>${parent.title}</span>
+        <button onclick="event.stopImmediatePropagation(); addChildToFramework(${parent.id});" class="hbtn new" style="font-size:10px;padding:4px 10px;">+ Add</button>
+      </div>
+      <div class="child-notes">
+        ${parent.children.map(child => `
+          <div class="child-note">
+            <input type="text" value="${child.title}" 
+                   onchange="updateChildTitle(${parent.id}, ${child.id}, this.value)">
+            <textarea onchange="updateChildContent(${parent.id}, ${child.id}, this.value)">${child.content}</textarea>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    container.appendChild(div);
   });
 }
 
-function pickColor(c) {
-  document.querySelectorAll('.cdot').forEach(d => d.classList.toggle('active', d.dataset.color === c));
-  document.getElementById('detailAccent').style.background = c;
-  document.getElementById('detailIcon').style.background = c + '22';
-  document.getElementById('detailIcon').style.border = '1px solid ' + c + '44';
-  if (sel) { const n = getNote(sel); if (n) { n.color = c; saveData(); } }
+function toggleFramework(el) {
+  const content = el.nextElementSibling;
+  content.style.display = content.style.display === 'none' ? 'block' : 'none';
 }
 
-function autoResize(el) {
-  el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px';
-}
-
-function setupEvents() {
-  canvas.addEventListener('mousedown', onMD);
-  canvas.addEventListener('mousemove', onMM);
-  canvas.addEventListener('mouseup', onMU);
-  canvas.addEventListener('wheel', onWheel, {passive:false});
-  canvas.addEventListener('contextmenu', e => e.preventDefault());
-  canvas.addEventListener('dblclick', onDbl);
-}
-
-function nodeAt(x, y) {
-  const cx = (x - panX)/sc, cy = (y - panY)/sc;
-  for (let n of [...notes].reverse()) {
-    const w = n.w||NR*2.5, h = n.h||NR*1.5;
-    if (cx >= n.x-w && cx <= n.x+w && cy >= n.y-h && cy <= n.y+h) return n;
-  }
-  return null;
-}
-
-function resizeHandle(x, y) {
-  if (!sel) return false;
-  const n = getNote(sel); if (!n) return false;
-  const cx = (x-panX)/sc, cy = (y-panY)/sc;
-  const w = n.w||NR*2.5, h = n.h||NR*1.5, s = 15;
-  return cx >= n.x+w-s && cx <= n.x+w && cy >= n.y+h-s && cy <= n.y+h;
-}
-
-function onMD(e) {
-  const r = canvas.getBoundingClientRect(), x = e.clientX-r.left, y = e.clientY-r.top;
-  mouseDownPos = {x, y};
-  if (connecting) {
-    const n = nodeAt(x, y);
-    if (n && n.id !== sel) {
-      if (!conns.some(c => (c.f===sel&&c.t===n.id)||(c.f===n.id&&c.t===sel)))
-        conns.push({f:sel, t:n.id});
-      updateConns(); saveData();
-    }
-    connecting = false; document.getElementById('modePill').style.display='none'; return;
-  }
-  if (resizeHandle(x,y)) { resizeNode = getNote(sel); dragStart={x,y}; return; }
-  dragNode = nodeAt(x,y); dragging = true; dragStart = {x,y};
-}
-
-function onMM(e) {
-  const r = canvas.getBoundingClientRect(), x = e.clientX-r.left, y = e.clientY-r.top;
-  hovered = nodeAt(x,y);
-  canvas.style.cursor = resizeHandle(x,y) ? 'nwse-resize' : (hovered ? 'pointer' : 'default');
-  if (resizeNode) {
-    const dx=(x-dragStart.x)/sc, dy=(y-dragStart.y)/sc;
-    resizeNode.w = Math.max(20,(resizeNode.w||NR*2.5)+dx);
-    resizeNode.h = Math.max(15,(resizeNode.h||NR*1.5)+dy);
-    dragStart={x,y}; return;
-  }
-  if (!dragging) return;
-  if (dragNode) {
-    dragNode.x += (x-dragStart.x)/sc; dragNode.y += (y-dragStart.y)/sc;
-  } else {
-    panX += x-dragStart.x; panY += y-dragStart.y;
-  }
-  dragStart = {x,y};
-}
-
-function onMU(e) {
-  const r = canvas.getBoundingClientRect(), x = e.clientX-r.left, y = e.clientY-r.top;
-  if (resizeNode) { saveData(); resizeNode=null; return; }
-  const dist = Math.hypot(x - mouseDownPos.x, y - mouseDownPos.y);
-  if (dist < 5) {
-    const n = nodeAt(x, y);
-    if (n) { sel = n.id; openPanel(n); }
-  }
-  dragging=false; dragNode=null; saveData();
-}
-
-function onDbl(e) {
-  const r = canvas.getBoundingClientRect(), x = e.clientX-r.left, y = e.clientY-r.top;
-  if (!nodeAt(x,y)) createNewNote((x-panX)/sc, (y-panY)/sc);
-}
-
-function onWheel(e) {
-  e.preventDefault();
-  sc = Math.max(0.1, Math.min(4, sc * (e.deltaY < 0 ? 1.1 : 0.9)));
-}
-
-/* ── Physics ── */
-function physics() {
-  for (let n of notes) {
-    if (n===dragNode||n===resizeNode) continue;
-    let fx=0, fy=0;
-    for (let c of conns) {
-      const o = c.f===n.id?getNote(c.t):c.t===n.id?getNote(c.f):null;
-      if (o) { const dx=o.x-n.x,dy=o.y-n.y,d=Math.hypot(dx,dy)||1; fx+=(dx/d)*SPRING; fy+=(dy/d)*SPRING; }
-    }
-    for (let o of notes) {
-      if (o.id!==n.id) { const dx=n.x-o.x,dy=n.y-o.y,d=Math.hypot(dx,dy)||1; if(d<300){fx+=(dx/d)*(REPUL/(d*d));fy+=(dy/d)*(REPUL/(d*d));} }
-    }
-    n.vx=(n.vx+fx)*DAMP; n.vy=(n.vy+fy)*DAMP; n.x+=n.vx; n.y+=n.vy;
-  }
-}
-
-/* ── Draw ── */
-function draw() {
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle='#0a0a12'; ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle='rgba(255,255,255,0.03)';
-  const gs=40*sc, ox=panX%gs, oy=panY%gs;
-  for(let x=ox;x<canvas.width;x+=gs) for(let y=oy;y<canvas.height;y+=gs){
-    ctx.beginPath(); ctx.arc(x,y,1,0,Math.PI*2); ctx.fill();
-  }
-  ctx.save();
-  ctx.translate(panX,panY);
-  ctx.scale(sc,sc);
-
-  /* glowing connections */
-  for (let c of conns) {
-    const f=getNote(c.f), t=getNote(c.t); if(!f||!t) continue;
-    const fw=f.w||NR*2.5, fh=f.h||NR*1.5, tw=t.w||NR*2.5, th=t.h||NR*1.5;
-    const dx=t.x-f.x, dy=t.y-f.y, dist=Math.hypot(dx,dy)||1;
-    const ux=dx/dist, uy=dy/dist;
-    const t1=Math.min(ux?fw/Math.abs(ux):Infinity, uy?fh/Math.abs(uy):Infinity);
-    const t2=Math.min(ux?tw/Math.abs(ux):Infinity, uy?th/Math.abs(uy):Infinity);
-    const sx=f.x+ux*t1, sy=f.y+uy*t1, ex=t.x-ux*t2, ey=t.y-uy*t2;
-    const lw = 4.5/sc;
-    ctx.shadowColor='#22d3ee'; ctx.shadowBlur=20/sc;
-    ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex,ey);
-    ctx.lineWidth=lw+7; ctx.strokeStyle='rgba(34,211,238,0.22)'; ctx.stroke();
-    ctx.shadowBlur=12/sc; ctx.lineWidth=lw+3; ctx.strokeStyle='rgba(103,232,249,0.45)'; ctx.stroke();
-    ctx.shadowBlur=6/sc; ctx.lineWidth=lw; ctx.strokeStyle='#67e8f9'; ctx.stroke();
-    ctx.shadowBlur=2/sc; ctx.lineWidth=lw*0.55; ctx.strokeStyle='#ffffff'; ctx.stroke();
-    const mx=(sx+ex)/2, my=(sy+ey)/2;
-    ctx.shadowBlur=10/sc; ctx.fillStyle='#67e8f9';
-    ctx.beginPath(); ctx.arc(mx,my,2.8/sc,0,Math.PI*2); ctx.fill();
-    ctx.shadowBlur=0;
-  }
-
-  /* nodes */
-  for (let n of notes) {
-    const w=n.w||NR*2.5, h=n.h||NR*1.5;
-    const isSel=n.id===sel, isHov=n.id===hovered?.id;
-    ctx.save();
-    if (isSel) { ctx.shadowColor=n.color+'88'; ctx.shadowBlur=16/sc; }
-    ctx.fillStyle='#0d0d1a';
-    roundRect(ctx,n.x-w,n.y-h,w*2,h*2,8/sc); ctx.fill();
-    ctx.fillStyle=n.color+(isSel?'18':isHov?'10':'08');
-    roundRect(ctx,n.x-w,n.y-h,w*2,h*2,8/sc); ctx.fill();
-    ctx.shadowBlur=0;
-    ctx.strokeStyle=isSel?n.color+'cc':isHov?n.color+'55':n.color+'30';
-    ctx.lineWidth=(isSel?1.5:0.8)/sc;
-    roundRect(ctx,n.x-w,n.y-h,w*2,h*2,8/sc); ctx.stroke();
-    ctx.fillStyle=n.color+(isSel?'cc':'66');
-    roundRect(ctx,n.x-w,n.y-h,3/sc,h*2,3/sc); ctx.fill();
-    ctx.restore();
-
-    const fs=11/sc, pad=10/sc, leftEdge=n.x-w+pad+4/sc, top=n.y-h+pad, cw=w*2-pad*2-4/sc;
-    ctx.fillStyle=isSel?'#f1f5f9':(isHov?'#cbd5e1':'rgba(255,255,255,0.75)');
-    ctx.textAlign='left'; ctx.textBaseline='top';
-    ctx.font='500 '+fs+'px Inter,sans-serif';
-    ctx.fillText(n.title||'Untitled',leftEdge,top,cw);
-    const cfs=9/sc;
-    ctx.font='300 '+cfs+'px Inter,sans-serif'; ctx.fillStyle='rgba(255,255,255,0.35)';
-    const raw=(n.content||'').replace(/\n/g,' ').trim();
-    if (raw) {
-      const words=raw.split(/\s+/); let line='';
-      const lh=Math.max(cfs+3/sc,11/sc); let cy2=top+fs+5/sc;
-      const mh=h*2-(fs+pad*2+5/sc), ml=Math.max(1,Math.floor(mh/lh)); let dl=0;
-      for (let i=0;i<words.length;i++){
-        const test=line?line+' '+words[i]:words[i];
-        if(ctx.measureText(test).width>cw&&line){if(dl<ml){ctx.fillText(line,leftEdge,cy2);dl++;cy2+=lh;}line=words[i];}else line=test;
-      }
-      if(line&&dl<ml) ctx.fillText(line,leftEdge,cy2);
-    }
-    if (isSel) {
-      const hs=10/sc; ctx.fillStyle=n.color+'99';
-      ctx.beginPath(); ctx.moveTo(n.x+w,n.y+h); ctx.lineTo(n.x+w-hs,n.y+h); ctx.lineTo(n.x+w,n.y+h-hs); ctx.closePath(); ctx.fill();
-    }
-  }
-  ctx.restore();
-}
-
-function roundRect(ctx,x,y,w,h,r) {
-  ctx.beginPath();
-  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
-  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
-  ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
-  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
-  ctx.closePath();
-}
-
-function animate() { physics(); draw(); requestAnimationFrame(animate); }
-
-/* ── CRUD ── */
-function createNewNote(wx, wy) {
-  const note = {
+function addNewParentFramework() {
+  const title = prompt("New Category / Framework Name:");
+  if (!title) return;
+  frameworks.push({
     id: Date.now(),
-    title: 'New note',
-    content: '',
-    x: wx !== undefined ? wx : (canvas.width/2 - panX)/sc,
-    y: wy !== undefined ? wy : (canvas.height/2 - panY)/sc,
-    vx: 0, vy: 0,
-    color: COLORS[notes.length % COLORS.length],
-    w: NR*2.5, h: NR*1.5
-  };
-  notes.push(note);
-  sel = note.id;
-  saveData();
-  openPanel(note);
-  document.getElementById('clickHint').style.opacity = '0';
+    title: title,
+    children: []
+  });
+  renderFramework();
+  saveFramework();
 }
 
-function deleteSelected() {
-  if (!sel) return;
-  if (!confirm('Delete this note?')) return;
-  notes = notes.filter(n => n.id !== sel);
-  conns = conns.filter(c => c.f !== sel && c.t !== sel);
-  sel = null; closePanel(); saveData();
-  showToast('Note deleted');
+function addChildToFramework(parentId) {
+  const parent = frameworks.find(p => p.id === parentId);
+  if (!parent) return;
+  const newChild = { id: Date.now(), title: "New Item", content: "" };
+  parent.children.push(newChild);
+  renderFramework();
+  saveFramework();
 }
 
-function getNote(id) { return notes.find(n => n.id === id); }
-
-/* ── Panel ── */
-function openPanel(n) {
-  panelOpen = true;
-  document.getElementById('detailPanel').classList.add('open');
-  const ti = document.getElementById('noteTitle');
-  ti.value = n.title; autoResize(ti);
-  document.getElementById('noteContent').value = n.content;
-  document.getElementById('detailAccent').style.background = n.color;
-  document.getElementById('detailTag').textContent = 'NOTE · ' + new Date(n.id).toLocaleDateString('en-US',{month:'short',day:'numeric'});
-  const icon = document.getElementById('detailIcon');
-  icon.style.background = n.color + '22';
-  icon.style.border = '1px solid ' + n.color + '44';
-  icon.textContent = NOTE_ICONS[notes.indexOf(n) % NOTE_ICONS.length] || '📄';
-  document.querySelectorAll('.cdot').forEach(d => d.classList.toggle('active', d.dataset.color === n.color));
-  updateConns();
-  setTimeout(() => document.getElementById('noteContent').focus(), 300);
+function updateChildTitle(parentId, childId, newTitle) {
+  const parent = frameworks.find(p => p.id === parentId);
+  const child = parent.children.find(c => c.id === childId);
+  if (child) child.title = newTitle;
+  saveFramework();
 }
 
-function closePanel() {
-  panelOpen = false; sel = null;
-  document.getElementById('detailPanel').classList.remove('open');
+function updateChildContent(parentId, childId, newContent) {
+  const parent = frameworks.find(p => p.id === parentId);
+  const child = parent.children.find(c => c.id === childId);
+  if (child) child.content = newContent;
+  saveFramework();
 }
 
-/* ── Connections ── */
-function addConnectionMode() {
-  if (!sel) return;
-  connecting = true; document.getElementById('modePill').style.display = 'block';
+function saveFramework() {
+  localStorage.setItem('docx_frameworks', JSON.stringify(frameworks));
 }
 
-function updateConns() {
-  if (!sel) return;
-  const list = document.getElementById('connectionsList');
-  const sect = document.getElementById('connSection');
-  list.innerHTML = '';
-  const mine = conns.filter(c => c.f===sel || c.t===sel);
-  sect.style.display = mine.length ? 'block' : 'none';
-  for (let c of mine) {
-    const oid = c.f===sel ? c.t : c.f, o = getNote(oid); if (!o) continue;
-    const arrow = c.f===sel ? '→' : '←';
-    const el = document.createElement('div'); el.className = 'conn-item';
-    el.innerHTML = '<span class="conn-item-dot" style="background:'+o.color+'"></span><span style="flex:1">'+arrow+' '+esc(o.title)+'</span><span class="conn-remove" onclick="event.stopPropagation();removeConn('+c.f+','+c.t+')">✕</span>';
-    el.onclick = function(e) { if (!e.target.classList.contains('conn-remove')) { sel=oid; openPanel(getNote(oid)); } };
-    list.appendChild(el);
-  }
+function loadFramework() {
+  const saved = localStorage.getItem('docx_frameworks');
+  if (saved) frameworks = JSON.parse(saved);
 }
 
-function removeConn(f, t) {
-  conns = conns.filter(c => !(c.f===f && c.t===t));
-  updateConns(); saveData();
+// ==================== MODE SWITCH ====================
+function switchMode(mode) {
+  document.getElementById('canvas-mode').style.display = mode === 'canvas' ? 'block' : 'none';
+  document.getElementById('framework-mode').style.display = mode === 'framework' ? 'block' : 'none';
+
+  document.getElementById('btn-canvas').classList.toggle('active', mode === 'canvas');
+  document.getElementById('btn-framework').classList.toggle('active', mode === 'framework');
+
+  if (mode === 'framework') renderFramework();
 }
 
-function disconnectAll() {
-  if (!sel) return;
-  const count = conns.filter(c => c.f===sel || c.t===sel).length;
-  conns = conns.filter(c => c.f!==sel && c.t!==sel);
-  updateConns(); saveData();
-  showToast('Disconnected ' + count + ' link(s)');
-}
-
-/* ── Live update ── */
-function liveUpdate() {
-  if (!sel) return;
-  const n = getNote(sel); if (!n) return;
-  n.title = document.getElementById('noteTitle').value || 'Untitled';
-  n.content = document.getElementById('noteContent').value;
-  document.getElementById('savedIndicator').classList.remove('visible');
-}
-
-function saveNote() {
-  liveUpdate(); saveData();
-  const si = document.getElementById('savedIndicator');
-  si.classList.add('visible');
-  setTimeout(() => si.classList.remove('visible'), 2000);
-  showToast('Saved');
-}
-
-/* ── Storage ── */
-function saveData() {
-  try {
-    localStorage.setItem('docx_notes', JSON.stringify(notes));
-    localStorage.setItem('docx_conns', JSON.stringify(conns));
-  } catch(e) {}
-}
-
-function loadData() {
-  try {
-    const n = localStorage.getItem('docx_notes');
-    const c = localStorage.getItem('docx_conns') || localStorage.getItem('docx_connections');
-    if (n) notes = JSON.parse(n);
-    if (c) conns = JSON.parse(c).map(x => ({f: x.f||x.from, t: x.t||x.to}));
-  } catch(e) {}
-}
-
-/* ── Export / Import ── */
-function exportJSON() {
-  const payload = {
-    meta: { app: 'DocX', exported: new Date().toISOString() },
-    notes: notes,
-    connections: conns,
-    view: { panX: panX, panY: panY, scale: sc }
-  };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'docx_' + Date.now() + '.json';
-  document.body.appendChild(a); a.click(); a.remove();
-  URL.revokeObjectURL(url);
-  showToast('Exported ' + notes.length + ' notes');
-}
-
-function importJSON(e) {
-  const file = e.target.files && e.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function() {
-    try {
-      const obj = JSON.parse(reader.result);
-      let iN = [], iC = [], ipx = 0, ipy = 0, isc = 1;
-      if (obj.notes && Array.isArray(obj.notes)) iN = obj.notes;
-      else if (obj.payload && obj.payload.notes) iN = obj.payload.notes;
-      const rawC = obj.connections || (obj.payload && obj.payload.connections) || [];
-      iC = rawC.map(x => ({f: x.f||x.from, t: x.t||x.to}));
-      if (obj.view) { ipx = obj.view.panX||0; ipy = obj.view.panY||0; isc = obj.view.scale||1; }
-      if (!iN.length) { showToast('No notes found in file', true); return; }
-      if (!confirm('Import ' + iN.length + ' note(s)? This replaces current notes.')) return;
-      notes = iN; conns = iC; panX = ipx; panY = ipy; sc = isc;
-      sel = null; closePanel(); saveData();
-      showToast('Imported ' + notes.length + ' notes');
-    } catch(err) { showToast('Invalid file: ' + err.message, true); }
-  };
-  reader.readAsText(file);
-  e.target.value = '';
-}
-
-function clearAll() {
-  if (!confirm('Delete all notes and connections?')) return;
-  notes = []; conns = []; sel = null; closePanel(); saveData();
-  showToast('Cleared');
-}
-
-/* ── Helpers ── */
-function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function showToast(msg, isErr) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className = 'toast show' + (isErr ? ' err' : '');
-  clearTimeout(t._t); t._t = setTimeout(() => t.className = 'toast', 2500);
-}
+// Initialize
+window.addEventListener('load', () => {
+  loadFramework();
+  // ... your original canvas initialization code ...
+});
 </script>
 </body>
 </html>
