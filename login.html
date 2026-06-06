@@ -1,152 +1,258 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>DocX Login</title>
-    <style>
-        body{font-family:Segoe UI,Arial;background:#071021;color:#e6f6fb;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
-        .card{background:#071b26;padding:28px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.5);width:360px}
-        h2{margin-bottom:8px}
-        label{font-size:13px;color:#9fb8c3}
-        input{width:100%;padding:10px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:inherit;margin-bottom:12px}
-        .row{display:flex;gap:8px}
-        .btn{padding:10px 12px;border-radius:6px;border:none;background:#06b6d4;color:#042;cursor:pointer}
-        .link{background:transparent;border:1px solid rgba(255,255,255,0.04);color:#a9d9e0}
-        .muted{font-size:13px;color:#7fa3ad;margin-top:8px}
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Doxnote – Login</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --bg2: #1a1d27;
+      --bg3: #22263a;
+      --border: #2e3248;
+      --purple: #6c63ff;
+      --purple-hover: #574fd6;
+      --text: #e8eaf6;
+      --text2: #9099b8;
+      --text3: #636b8a;
+      --error: #f87171;
+      --error-bg: rgba(239,68,68,0.12);
+      --error-border: rgba(239,68,68,0.3);
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: radial-gradient(ellipse at 60% 20%, #1e1b4b 0%, var(--bg) 60%);
+    }
+
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+      margin: 1rem;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 2rem;
+    }
+    .logo svg { flex-shrink: 0; }
+    .logo span {
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+    .subtitle { color: var(--text2); margin-bottom: 1.8rem; font-size: 0.9rem; }
+
+    .form-group { margin-bottom: 1.1rem; }
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      color: var(--text2);
+      margin-bottom: 6px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 0.72rem 1rem;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--text);
+      font-size: 0.95rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    .form-group input:focus {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 3px rgba(108,99,255,0.15);
+    }
+    .form-group input::placeholder { color: var(--text3); }
+
+    .error-msg {
+      background: var(--error-bg);
+      border: 1px solid var(--error-border);
+      color: var(--error);
+      padding: 0.6rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 0.78rem;
+      background: var(--purple);
+      color: #fff;
+      border: none;
+      border-radius: 9px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 0.4rem;
+      transition: background 0.2s, transform 0.1s;
+      letter-spacing: 0.2px;
+    }
+    .btn:hover { background: var(--purple-hover); }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .hint {
+      text-align: center;
+      margin-top: 1.4rem;
+      font-size: 0.82rem;
+      color: var(--text3);
+    }
+
+    /* spinner inside button */
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
 </head>
 <body>
-    <div class="card">
-        <h2>DocX Login</h2>
-        <div>
-            <label>Username</label>
-            <input id="username" placeholder="username">
-            <label>Password</label>
-            <input id="password" type="password" placeholder="password">
-            <div style="display:flex;gap:8px;margin-top:6px">
-                <button class="btn" id="loginBtn">Log In</button>
-                <button class="btn link" id="signupBtn">Create Account</button>
-            </div>
-            <div style="margin-top:12px;display:flex;gap:8px;justify-content:space-between;align-items:center">
-                <button id="guestBtn" class="btn link">Continue as Guest</button>
-                <a href="index.html" style="color:#9fb8c3;text-decoration:none;font-size:13px">Back</a>
-            </div>
-            <div style="margin-top:14px;border-top:1px dashed rgba(255,255,255,0.03);padding-top:12px">
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <button id="checkServerBtn" class="btn link" style="padding:8px">Check Server</button>
-                    <button id="copyCmdsBtn" class="btn" style="padding:8px">Copy Start Commands</button>
-                    <button id="openServerBtn" class="btn link" style="padding:8px">Open Server</button>
-                    <span id="serverStatus" style="margin-left:auto;color:#9fb8c3;font-size:13px">Server: unknown</span>
-                </div>
-                <pre id="serverCmds" style="display:none;margin-top:8px;background:rgba(255,255,255,0.02);padding:8px;border-radius:6px;font-size:13px;color:#c6eef6">npm install
-    npm start
-
-    # Server will run on http://localhost:3000
-    # Use Ctrl+C to stop the server</pre>
-            </div>
-            <p class="muted">Accounts are stored locally in your browser only.</p>
-        </div>
+  <div class="card">
+    <div class="logo">
+      <svg width="34" height="34" viewBox="0 0 36 36" fill="none">
+        <rect width="36" height="36" rx="10" fill="#6c63ff"/>
+        <path d="M10 12h16M10 18h10M10 24h12" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+      <span>Doxnote</span>
     </div>
 
-    <script src="https://cdn.auth0.com/js/auth0-spa-js/1.29.0/auth0-spa-js.production.js"></script>
-    <script>
-        // Configure Auth0
-        const AUTH0_DOMAIN = 'dev-t8ky1sq7itz4af5f.us.auth0.com';
-        const AUTH0_CLIENT_ID = 'tSmGAkXKm5yDMDQR5tCdjfHf5EOJTJ81';
-        const AUTH0_AUDIENCE = '';
+    <h2>Welcome back</h2>
+    <p class="subtitle">Sign in to access your notes</p>
 
-        let auth0 = null;
+    <div class="error-msg" id="errorMsg"></div>
 
-        async function initAuth0() {
-            auth0 = await createAuth0Client({
-                domain: AUTH0_DOMAIN,
-                client_id: AUTH0_CLIENT_ID,
-                cacheLocation: 'localstorage',
-                useRefreshTokens: true,
-                authorizationParams: {
-                    redirect_uri: window.location.origin + '/login.html',
-                    audience: AUTH0_AUDIENCE || undefined
-                }
-            });
+    <div class="form-group">
+      <label for="username">Username</label>
+      <input type="text" id="username" placeholder="Enter your username" autocomplete="username" />
+    </div>
 
-            // Handle redirect callback
-            if (window.location.search.includes('code=') && window.location.search.includes('state=')) {
-                try {
-                    await auth0.handleRedirectCallback();
-                } catch (err) {
-                    console.error('Callback error', err);
-                }
-                window.history.replaceState({}, document.title, '/login.html');
-            }
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
+    </div>
 
-            const isAuthenticated = await auth0.isAuthenticated();
-            if (isAuthenticated) {
-                const user = await auth0.getUser();
-                const token = await auth0.getTokenSilently();
-                localStorage.setItem('docx_token', token);
-                localStorage.setItem('docx_current_user', user.sub || user.email || user.name || 'auth0_user');
-                window.location.href = 'docx.html';
-            }
+    <button class="btn" id="loginBtn" onclick="doLogin()">Sign In</button>
+
+    <p class="hint">Protected by Doxnote Auth</p>
+  </div>
+
+  <script>
+    // ============================================================
+    // CONFIGURE YOUR CREDENTIALS HERE
+    // Add as many users as you want in this array.
+    // ============================================================
+    const USERS = [
+      { username: "admin",  password: "admin123",  redirect: "index.html" },
+      { username: "user1",  password: "pass1234",  redirect: "index.html" },
+      // Add more users here:
+      // { username: "yourname", password: "yourpass", redirect: "index.html" },
+    ];
+
+    // How long a session lasts in hours (default: 8 hours)
+    const SESSION_HOURS = 8;
+    // ============================================================
+
+    // If already logged in, go straight to the app
+    (function() {
+      const sess = getSession();
+      if (sess) {
+        const dest = new URLSearchParams(window.location.search).get('next') || sess.redirect || 'index.html';
+        window.location.replace(dest);
+      }
+    })();
+
+    function getSession() {
+      try {
+        const raw = localStorage.getItem('doxnote_session');
+        if (!raw) return null;
+        const s = JSON.parse(raw);
+        if (Date.now() > s.expires) { localStorage.removeItem('doxnote_session'); return null; }
+        return s;
+      } catch { return null; }
+    }
+
+    function doLogin() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const btn = document.getElementById('loginBtn');
+      const err = document.getElementById('errorMsg');
+
+      err.style.display = 'none';
+
+      if (!username || !password) {
+        return showError('Please enter your username and password.');
+      }
+
+      // Simulate a tiny delay for UX
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Signing in...';
+
+      setTimeout(() => {
+        const match = USERS.find(u => u.username === username && u.password === password);
+        if (!match) {
+          btn.disabled = false;
+          btn.textContent = 'Sign In';
+          return showError('Invalid username or password. Please try again.');
         }
 
-        initAuth0();
+        // Save session
+        const session = {
+          username: match.username,
+          redirect: match.redirect,
+          expires: Date.now() + SESSION_HOURS * 60 * 60 * 1000
+        };
+        localStorage.setItem('doxnote_session', JSON.stringify(session));
 
-        document.getElementById('signupBtn').addEventListener('click', async ()=>{
-            // Redirect to Auth0 hosted signup
-            await auth0.loginWithRedirect({ authorizationParams: { screen_hint: 'signup' } });
-        });
+        // Redirect
+        const next = new URLSearchParams(window.location.search).get('next') || match.redirect;
+        window.location.replace(next);
+      }, 400);
+    }
 
-        document.getElementById('loginBtn').addEventListener('click', async ()=>{
-            await auth0.loginWithRedirect();
-        });
+    function showError(msg) {
+      const el = document.getElementById('errorMsg');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
 
-        document.getElementById('guestBtn').addEventListener('click', ()=>{
-            if(!confirm('Continue as guest? Data will be stored in a shared guest space.')) return;
-            localStorage.removeItem('docx_token');
-            localStorage.setItem('docx_current_user', 'guest');
-            window.location.href = 'docx.html';
-        });
-
-        // Server helper controls
-        async function checkServer() {
-            const status = document.getElementById('serverStatus');
-            try {
-                const res = await fetch('http://localhost:3000/api/health');
-                if (!res.ok) throw new Error('no');
-                const j = await res.json();
-                status.textContent = 'Server: online';
-                status.style.color = '#9ff1d9';
-                return true;
-            } catch (err) {
-                status.textContent = 'Server: offline';
-                status.style.color = '#fca5a5';
-                return false;
-            }
-        }
-
-        document.getElementById('checkServerBtn').addEventListener('click', async ()=>{
-            await checkServer();
-            const pre = document.getElementById('serverCmds');
-            if (pre) pre.style.display = 'block';
-        });
-
-        document.getElementById('copyCmdsBtn').addEventListener('click', ()=>{
-            const cmds = 'npm install\n npm start';
-            navigator.clipboard.writeText(cmds).then(()=>{
-                alert('Copied start commands to clipboard');
-            }).catch(()=>{
-                alert('Unable to copy - please select and copy manually');
-            });
-            const pre = document.getElementById('serverCmds'); if (pre) pre.style.display = 'block';
-        });
-
-        document.getElementById('openServerBtn').addEventListener('click', ()=>{
-            window.open('http://localhost:3000', '_blank');
-        });
-
-        // auto-check server status on page load
-        setTimeout(()=>{ checkServer(); }, 500);
-    </script>
+    // Enter key support
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') doLogin();
+    });
+  </script>
 </body>
 </html>
