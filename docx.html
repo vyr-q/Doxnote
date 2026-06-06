@@ -4,634 +4,681 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DocX - Interactive Note Network</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', sans-serif; background: #0a0a12; color: #e2e8f0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: #0a0a12; color: #e2e8f0;
+  height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+}
 
-  /* Header */
-  .header {
-    display: flex; align-items: center; gap: 10px;
-    padding: 8px 16px; background: rgba(15,15,25,0.95);
-    border-bottom: 1px solid rgba(6,182,212,0.2);
-    flex-shrink: 0; flex-wrap: wrap;
-  }
-  .logo { font-size: 20px; font-weight: 700; color: #06b6d4; letter-spacing: -0.5px; }
-  .logo-sub { font-size: 11px; color: #64748b; margin-left: 2px; }
-  .spacer { flex: 1; }
-  .btn {
-    padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(6,182,212,0.3);
-    background: rgba(6,182,212,0.08); color: #94a3b8; cursor: pointer;
-    font-size: 12px; transition: all 0.15s; white-space: nowrap;
-  }
-  .btn:hover { background: rgba(6,182,212,0.18); color: #e2e8f0; border-color: rgba(6,182,212,0.6); }
-  .btn.primary { background: rgba(6,182,212,0.2); color: #06b6d4; border-color: rgba(6,182,212,0.5); font-weight: 600; }
-  .btn.primary:hover { background: rgba(6,182,212,0.35); }
-  .btn.danger { border-color: rgba(239,68,68,0.3); color: #f87171; }
-  .btn.danger:hover { background: rgba(239,68,68,0.15); }
-  .btn.success { border-color: rgba(34,197,94,0.4); color: #4ade80; background: rgba(34,197,94,0.08); }
-  .btn.success:hover { background: rgba(34,197,94,0.18); }
-  .btn.import-btn { border-color: rgba(168,85,247,0.4); color: #c084fc; background: rgba(168,85,247,0.08); }
-  .btn.import-btn:hover { background: rgba(168,85,247,0.2); }
-  .divider { width: 1px; height: 20px; background: rgba(255,255,255,0.1); }
+/* ── Header ── */
+.header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 16px; height: 46px; flex-shrink: 0;
+  background: #0d0d1a; border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.logo { font-size: 15px; font-weight: 600; color: #06b6d4; letter-spacing: -0.3px; }
+.logo-sub { font-size: 11px; color: #334155; margin-left: 6px; font-weight: 400; }
+.hspacer { flex: 1; }
+.hbtn {
+  padding: 5px 11px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);
+  background: transparent; color: #64748b; cursor: pointer;
+  font-size: 11px; font-family: 'Inter', sans-serif; font-weight: 500;
+  transition: all 0.13s; white-space: nowrap; letter-spacing: 0.01em;
+}
+.hbtn:hover { background: rgba(255,255,255,0.06); color: #cbd5e1; border-color: rgba(255,255,255,0.18); }
+.hbtn.new { background: rgba(6,182,212,0.12); color: #06b6d4; border-color: rgba(6,182,212,0.35); }
+.hbtn.new:hover { background: rgba(6,182,212,0.22); }
+.hbtn.exp { background: rgba(34,197,94,0.08); color: #4ade80; border-color: rgba(34,197,94,0.3); }
+.hbtn.exp:hover { background: rgba(34,197,94,0.16); }
+.hbtn.imp { background: rgba(168,85,247,0.08); color: #c084fc; border-color: rgba(168,85,247,0.3); }
+.hbtn.imp:hover { background: rgba(168,85,247,0.18); }
+.hbtn.danger { color: #f87171; border-color: rgba(239,68,68,0.25); }
+.hbtn.danger:hover { background: rgba(239,68,68,0.1); }
+.hdiv { width: 1px; height: 18px; background: rgba(255,255,255,0.08); margin: 0 2px; }
+input[type=file] { display: none; }
 
-  /* Layout */
-  .main { display: flex; flex: 1; overflow: hidden; }
+/* ── Layout ── */
+.main { display: flex; flex: 1; overflow: hidden; }
 
-  /* Sidebar */
-  .sidebar {
-    width: 220px; flex-shrink: 0;
-    background: rgba(10,10,20,0.9); border-right: 1px solid rgba(6,182,212,0.15);
-    display: flex; flex-direction: column; overflow: hidden;
-  }
-  .sidebar-header { padding: 10px 14px; font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid rgba(255,255,255,0.05); }
-  .notes-list { flex: 1; overflow-y: auto; padding: 6px; }
-  .note-item {
-    padding: 7px 10px; border-radius: 6px; cursor: pointer;
-    font-size: 13px; color: #94a3b8; display: flex; align-items: center; gap: 6px;
-    margin-bottom: 2px; transition: all 0.12s;
-  }
-  .note-item:hover { background: rgba(6,182,212,0.1); color: #e2e8f0; }
-  .note-item.active { background: rgba(6,182,212,0.18); color: #06b6d4; }
-  .note-item .note-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .note-item .del-btn { margin-left: auto; opacity: 0; font-size: 11px; color: #ef4444; padding: 1px 4px; border-radius: 3px; }
-  .note-item:hover .del-btn { opacity: 1; }
-  .del-btn:hover { background: rgba(239,68,68,0.2); }
-  .empty-state { padding: 24px 14px; text-align: center; color: #334155; font-size: 12px; }
-  .empty-state .big { font-size: 28px; margin-bottom: 8px; }
+/* ── Left panel: note list + editor ── */
+.left-panel {
+  width: 300px; flex-shrink: 0;
+  background: #0d0d1a; border-right: 1px solid rgba(255,255,255,0.07);
+  display: flex; flex-direction: column; overflow: hidden;
+}
 
-  /* Canvas */
-  .canvas-container { flex: 1; position: relative; overflow: hidden; }
-  canvas { display: block; width: 100%; height: 100%; }
-  .mode-indicator {
-    position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-    background: rgba(6,182,212,0.2); border: 1px solid rgba(6,182,212,0.4);
-    padding: 5px 14px; border-radius: 20px; font-size: 12px; color: #06b6d4;
-    pointer-events: none; display: none;
-  }
+/* Note list section */
+.list-section { flex-shrink: 0; }
+.list-header {
+  padding: 12px 16px 8px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.list-label {
+  font-size: 10px; font-weight: 600; color: #334155;
+  text-transform: uppercase; letter-spacing: 0.1em;
+}
+.list-count {
+  font-size: 10px; color: #1e3a5f;
+  background: rgba(6,182,212,0.1); border-radius: 10px;
+  padding: 1px 7px; font-weight: 500;
+}
+.notes-scroll { max-height: 220px; overflow-y: auto; padding: 0 8px 8px; }
+.notes-scroll::-webkit-scrollbar { width: 3px; }
+.notes-scroll::-webkit-scrollbar-track { background: transparent; }
+.notes-scroll::-webkit-scrollbar-thumb { background: rgba(6,182,212,0.2); border-radius: 3px; }
 
-  /* Edit Panel */
-  .edit-panel {
-    position: absolute; top: 60px; right: 20px;
-    width: 280px; background: rgba(15,15,28,0.96);
-    border: 1px solid rgba(6,182,212,0.25); border-radius: 10px;
-    display: none; flex-direction: column; z-index: 100;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-    min-height: 300px;
-  }
-  .panel-header {
-    padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid rgba(255,255,255,0.06); cursor: move;
-    font-size: 13px; font-weight: 600; color: #94a3b8;
-  }
-  .panel-close { cursor: pointer; color: #64748b; font-size: 14px; padding: 2px 4px; }
-  .panel-close:hover { color: #e2e8f0; }
-  .panel-body { padding: 12px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
-  .field-label { font-size: 11px; color: #64748b; margin-bottom: 3px; font-weight: 500; }
-  .field-input, .field-textarea {
-    width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 6px; padding: 7px 10px; color: #e2e8f0; font-size: 13px; font-family: inherit;
-  }
-  .field-input:focus, .field-textarea:focus { outline: none; border-color: rgba(6,182,212,0.5); }
-  .field-textarea { resize: none; height: 80px; }
-  .color-row { display: flex; align-items: center; gap: 8px; }
-  .color-swatches { display: flex; gap: 6px; flex-wrap: wrap; }
-  .swatch { width: 20px; height: 20px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.1s; }
-  .swatch:hover { transform: scale(1.2); }
-  .swatch.active { border-color: #fff; transform: scale(1.15); }
-  .panel-actions { display: flex; gap: 6px; }
-  .panel-actions .btn { flex: 1; justify-content: center; text-align: center; }
-  .connections-section { border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px; }
-  .conn-label { font-size: 11px; color: #64748b; font-weight: 600; margin-bottom: 6px; }
-  .conn-item { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #94a3b8; padding: 3px 0; }
-  .conn-remove { color: #ef4444; cursor: pointer; font-size: 11px; }
-  .conn-remove:hover { color: #fca5a5; }
+.note-item {
+  padding: 8px 10px; border-radius: 7px; cursor: pointer;
+  display: flex; align-items: center; gap: 9px; margin-bottom: 2px;
+  transition: all 0.12s; border: 1px solid transparent;
+}
+.note-item:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.07); }
+.note-item.active {
+  background: rgba(6,182,212,0.08);
+  border-color: rgba(6,182,212,0.2);
+}
+.note-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.note-title-text {
+  flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 13px; font-weight: 400; color: #64748b;
+}
+.note-item.active .note-title-text { color: #7dd3fc; font-weight: 500; }
+.note-item:hover .note-title-text { color: #94a3b8; }
+.note-del {
+  opacity: 0; font-size: 11px; color: #ef4444; cursor: pointer;
+  padding: 1px 4px; border-radius: 3px; flex-shrink: 0; line-height: 1;
+  transition: opacity 0.12s;
+}
+.note-item:hover .note-del { opacity: 1; }
+.note-del:hover { background: rgba(239,68,68,0.15); }
 
-  /* Resize handle */
-  .resize-handle { position: absolute; bottom: 0; right: 0; width: 14px; height: 14px; cursor: nwse-resize; }
-  .resize-handle::after { content: ''; position: absolute; bottom: 3px; right: 3px; width: 0; height: 0; border-style: solid; border-width: 0 0 8px 8px; border-color: transparent transparent rgba(6,182,212,0.5) transparent; }
+.empty-hint {
+  padding: 20px 16px; text-align: center;
+  font-size: 12px; color: #1e3a5f; line-height: 1.6;
+}
 
-  /* Toast */
-  .toast {
-    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    background: rgba(6,182,212,0.15); border: 1px solid rgba(6,182,212,0.4);
-    padding: 8px 20px; border-radius: 20px; font-size: 13px; color: #06b6d4;
-    z-index: 9999; pointer-events: none; opacity: 0; transition: opacity 0.3s;
-  }
-  .toast.show { opacity: 1; }
-  .toast.error { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.4); color: #f87171; }
+/* Divider between list and editor */
+.panel-divider {
+  height: 1px; background: rgba(255,255,255,0.07); margin: 0 0 0 0; flex-shrink: 0;
+}
 
-  input[type=file] { display: none; }
+/* ── Editor section ── */
+.editor-section {
+  flex: 1; display: flex; flex-direction: column; overflow: hidden;
+  transition: opacity 0.2s;
+}
+.editor-empty {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 10px; padding: 32px 20px; text-align: center;
+}
+.editor-empty-icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  background: rgba(6,182,212,0.06); border: 1px solid rgba(6,182,212,0.12);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+.editor-empty-title { font-size: 13px; font-weight: 500; color: #1e3a5f; }
+.editor-empty-sub { font-size: 11px; color: #0f2744; line-height: 1.5; }
+
+.editor-active { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* Color accent bar at top of editor */
+.editor-accent { height: 2px; flex-shrink: 0; transition: background 0.2s; }
+
+.editor-top { padding: 14px 16px 0; flex-shrink: 0; }
+
+/* Title input — big and beautiful */
+.title-input {
+  width: 100%; background: transparent; border: none; outline: none;
+  font-family: 'Lora', Georgia, serif;
+  font-size: 22px; font-weight: 500; color: #f1f5f9;
+  line-height: 1.3; letter-spacing: -0.3px;
+  resize: none; overflow: hidden;
+  caret-color: #06b6d4;
+}
+.title-input::placeholder { color: #1e3a5f; }
+
+.editor-meta {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 16px 10px; flex-shrink: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.meta-label { font-size: 10px; color: #334155; font-weight: 500; }
+.color-dots { display: flex; gap: 5px; }
+.cdot {
+  width: 14px; height: 14px; border-radius: 50%; cursor: pointer;
+  border: 2px solid transparent; transition: transform 0.1s, border-color 0.1s;
+  flex-shrink: 0;
+}
+.cdot:hover { transform: scale(1.25); }
+.cdot.active { border-color: rgba(255,255,255,0.8); transform: scale(1.15); }
+.meta-spacer { flex: 1; }
+.conn-btn {
+  font-size: 10px; font-family: 'Inter', sans-serif; font-weight: 500;
+  padding: 3px 9px; border-radius: 5px; cursor: pointer;
+  background: rgba(6,182,212,0.08); border: 1px solid rgba(6,182,212,0.2);
+  color: #22d3ee; transition: all 0.12s;
+}
+.conn-btn:hover { background: rgba(6,182,212,0.18); }
+
+/* Content area */
+.content-wrap { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; }
+.content-wrap::-webkit-scrollbar { width: 3px; }
+.content-wrap::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+
+.content-input {
+  width: 100%; background: transparent; border: none; outline: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 13.5px; font-weight: 300; color: #94a3b8;
+  line-height: 1.8; letter-spacing: 0.01em;
+  resize: none; flex: 1; min-height: 120px;
+  caret-color: #06b6d4;
+}
+.content-input::placeholder { color: #1e3a5f; font-style: italic; }
+
+/* Connections in editor */
+.conn-section { flex-shrink: 0; padding: 10px 16px 14px; border-top: 1px solid rgba(255,255,255,0.05); }
+.conn-section-label { font-size: 10px; color: #334155; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 7px; }
+.conn-list { display: flex; flex-direction: column; gap: 3px; }
+.conn-item {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 12px; color: #475569; padding: 4px 8px; border-radius: 5px;
+  background: rgba(255,255,255,0.02);
+}
+.conn-item:hover { background: rgba(255,255,255,0.04); }
+.conn-remove { color: #ef4444; cursor: pointer; opacity: 0.6; font-size: 10px; }
+.conn-remove:hover { opacity: 1; }
+
+/* Save row */
+.save-row {
+  flex-shrink: 0; padding: 10px 16px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  display: flex; align-items: center; gap: 8px;
+}
+.save-btn {
+  flex: 1; padding: 8px; border-radius: 7px; cursor: pointer;
+  background: rgba(6,182,212,0.12); border: 1px solid rgba(6,182,212,0.3);
+  color: #06b6d4; font-size: 12px; font-family: 'Inter', sans-serif; font-weight: 500;
+  transition: all 0.13s; letter-spacing: 0.01em;
+}
+.save-btn:hover { background: rgba(6,182,212,0.22); }
+.saved-indicator { font-size: 10px; color: #1e3a5f; transition: color 0.3s; }
+.saved-indicator.visible { color: #4ade80; }
+
+/* ── Canvas ── */
+.canvas-wrap { flex: 1; position: relative; overflow: hidden; }
+canvas { display: block; width: 100%; height: 100%; }
+.mode-pill {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  background: rgba(6,182,212,0.15); border: 1px solid rgba(6,182,212,0.35);
+  padding: 5px 16px; border-radius: 20px; font-size: 11px; color: #06b6d4;
+  pointer-events: none; display: none; font-family: 'Inter', sans-serif;
+  white-space: nowrap;
+}
+
+/* ── Toast ── */
+.toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: rgba(15,15,28,0.9); border: 1px solid rgba(6,182,212,0.3);
+  padding: 7px 18px; border-radius: 20px; font-size: 12px; color: #06b6d4;
+  z-index: 9999; pointer-events: none; opacity: 0; transition: opacity 0.25s;
+  font-family: 'Inter', sans-serif; white-space: nowrap;
+}
+.toast.show { opacity: 1; }
+.toast.err { border-color: rgba(239,68,68,0.4); color: #f87171; }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <span class="logo">📚 DocX</span>
-  <span class="logo-sub">Interactive Note Network</span>
-  <div class="spacer"></div>
-  <button class="btn primary" onclick="createNewNote()">+ New Note</button>
-  <div class="divider"></div>
-  <button class="btn success" onclick="exportJSON()" title="Export notes as JSON file">⬇ Export JSON</button>
-  <button class="btn import-btn" onclick="document.getElementById('importFile').click()" title="Import notes from JSON file">⬆ Import JSON</button>
-  <input type="file" id="importFile" accept=".json,application/json" onchange="importJSON(event)">
-  <div class="divider"></div>
-  <button class="btn" onclick="newDocument()">New Doc</button>
-  <button class="btn danger" onclick="clearAll()">Clear All</button>
+  <span class="logo">DocX</span>
+  <span class="logo-sub">Note Network</span>
+  <div class="hspacer"></div>
+  <button class="hbtn new" onclick="createNewNote()">+ New note</button>
+  <div class="hdiv"></div>
+  <button class="hbtn exp" onclick="exportJSON()">↓ Export</button>
+  <button class="hbtn imp" onclick="document.getElementById('importFile').click()">↑ Import</button>
+  <input type="file" id="importFile" accept=".json" onchange="importJSON(event)">
+  <div class="hdiv"></div>
+  <button class="hbtn" onclick="newDocument()">New doc</button>
+  <button class="hbtn danger" onclick="clearAll()">Clear all</button>
 </div>
 
 <div class="main">
-  <div class="sidebar">
-    <div class="sidebar-header">Notes</div>
-    <div class="notes-list" id="notesList">
-      <div class="empty-state" id="emptyState">
-        <div class="big">📄</div>
-        Click "New Note" to get started
+
+  <!-- Left panel -->
+  <div class="left-panel">
+
+    <!-- Note list -->
+    <div class="list-section">
+      <div class="list-header">
+        <span class="list-label">Notes</span>
+        <span class="list-count" id="noteCount">0</span>
+      </div>
+      <div class="notes-scroll" id="notesList">
+        <div class="empty-hint" id="emptyHint">No notes yet.<br>Click "+ New note" to start.</div>
       </div>
     </div>
+
+    <div class="panel-divider"></div>
+
+    <!-- Editor -->
+    <div class="editor-section" id="editorSection">
+      <div class="editor-empty" id="editorEmpty">
+        <div class="editor-empty-icon">✏️</div>
+        <div class="editor-empty-title">No note selected</div>
+        <div class="editor-empty-sub">Click a note on the canvas<br>or in the list above to edit it</div>
+      </div>
+      <div class="editor-active" id="editorActive" style="display:none">
+        <div class="editor-accent" id="editorAccent"></div>
+        <div class="editor-top">
+          <textarea class="title-input" id="noteTitle" rows="1" placeholder="Note title…" oninput="autoResize(this); liveUpdate()"></textarea>
+        </div>
+        <div class="editor-meta">
+          <span class="meta-label">Color</span>
+          <div class="color-dots" id="colorDots"></div>
+          <div class="meta-spacer"></div>
+          <button class="conn-btn" onclick="addConnectionMode()">+ Connect</button>
+        </div>
+        <div class="content-wrap">
+          <textarea class="content-input" id="noteContent" placeholder="Start writing your note…" oninput="liveUpdate()"></textarea>
+        </div>
+        <div class="conn-section" id="connSection" style="display:none">
+          <div class="conn-section-label">Connections</div>
+          <div class="conn-list" id="connectionsList"></div>
+        </div>
+        <div class="save-row">
+          <button class="save-btn" onclick="saveNote()">Save note</button>
+          <span class="saved-indicator" id="savedIndicator">Saved</span>
+        </div>
+      </div>
+    </div>
+
   </div>
 
-  <div class="canvas-container">
+  <!-- Canvas -->
+  <div class="canvas-wrap">
     <canvas id="canvas"></canvas>
-    <div class="mode-indicator" id="modeIndicator">📍 Click another note to connect</div>
-
-    <div class="edit-panel" id="editPanel">
-      <div class="panel-header">
-        <span>Edit Note</span>
-        <span class="panel-close" onclick="closeEditPanel()">✕</span>
-      </div>
-      <div class="panel-body">
-        <div>
-          <div class="field-label">Title</div>
-          <input class="field-input" id="noteTitle" type="text" placeholder="Note title..." oninput="liveUpdate()">
-        </div>
-        <div>
-          <div class="field-label">Content</div>
-          <textarea class="field-textarea" id="noteContent" placeholder="Write your note..." oninput="liveUpdate()"></textarea>
-        </div>
-        <div>
-          <div class="field-label">Color</div>
-          <div class="color-swatches" id="colorSwatches"></div>
-        </div>
-        <div class="panel-actions">
-          <button class="btn" onclick="addConnectionMode()">+ Connect</button>
-          <button class="btn primary" onclick="saveNote()">Save</button>
-        </div>
-        <div class="connections-section">
-          <div class="conn-label">Connections</div>
-          <div id="connectionsList"></div>
-        </div>
-      </div>
-      <div class="resize-handle" id="resizeHandle"></div>
-    </div>
+    <div class="mode-pill" id="modePill">Click another note to connect</div>
   </div>
+
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-const COLORS = ['#06b6d4','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444','#f97316'];
-const NODE_RADIUS = 30;
-const NODE_SPRING = 0.08;
-const NODE_REPULSION = 4500;
-const DAMPING = 0.92;
+const COLORS = ['#06b6d4','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444','#f97316','#a3e635'];
+const NR = 30, SPRING = 0.08, REPUL = 4500, DAMP = 0.92;
 
-let notes = [], connections = [], selectedNote = null;
-let connecting = false, hoveredNode = null;
+let notes = [], conns = [], sel = null;
+let connecting = false, hovered = null;
 let canvas, ctx;
-let panX = 0, panY = 0, scale = 1;
-let isDragging = false, dragStart = {x:0,y:0}, draggedNode = null;
-let resizingNote = null;
+let panX = 0, panY = 0, sc = 1;
+let dragging = false, dragStart = {x:0,y:0}, dragNode = null, resizeNode = null;
 
-// Init
 window.addEventListener('load', () => {
   canvas = document.getElementById('canvas');
   ctx = canvas.getContext('2d');
-  loadData();
-  resizeCanvas();
-  buildColorSwatches();
-  setupEvents();
-  animate();
-  updateUI();
+  loadData(); resizeCanvas(); buildDots(); setupEvents(); animate(); updateUI();
 });
 window.addEventListener('resize', resizeCanvas);
 
 function resizeCanvas() {
   const c = canvas.parentElement;
-  canvas.width = c.clientWidth;
-  canvas.height = c.clientHeight;
+  canvas.width = c.clientWidth; canvas.height = c.clientHeight;
 }
 
-function buildColorSwatches() {
-  const el = document.getElementById('colorSwatches');
+function buildDots() {
+  const el = document.getElementById('colorDots');
   COLORS.forEach(c => {
-    const s = document.createElement('div');
-    s.className = 'swatch';
-    s.style.background = c;
-    s.dataset.color = c;
-    s.onclick = () => { pickColor(c); };
-    el.appendChild(s);
+    const d = document.createElement('div');
+    d.className = 'cdot'; d.style.background = c; d.dataset.color = c;
+    d.onclick = () => pickColor(c);
+    el.appendChild(d);
   });
 }
 
 function pickColor(c) {
-  document.querySelectorAll('.swatch').forEach(s => s.classList.toggle('active', s.dataset.color === c));
-  if (selectedNote) {
-    const n = getNote(selectedNote);
-    if (n) { n.color = c; saveData(); }
-  }
+  document.querySelectorAll('.cdot').forEach(d => d.classList.toggle('active', d.dataset.color === c));
+  document.getElementById('editorAccent').style.background = c;
+  if (sel) { const n = getNote(sel); if (n) { n.color = c; saveData(); } }
 }
 
+function autoResize(el) {
+  el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px';
+}
+
+/* ── Events ── */
 function setupEvents() {
-  canvas.addEventListener('mousedown', onMouseDown);
-  canvas.addEventListener('mousemove', onMouseMove);
-  canvas.addEventListener('mouseup', onMouseUp);
-  canvas.addEventListener('wheel', onWheel, {passive: false});
+  canvas.addEventListener('mousedown', onMD);
+  canvas.addEventListener('mousemove', onMM);
+  canvas.addEventListener('mouseup', onMU);
+  canvas.addEventListener('wheel', onWheel, {passive:false});
   canvas.addEventListener('contextmenu', e => e.preventDefault());
-  canvas.addEventListener('dblclick', onDblClick);
-
-  // Panel drag
-  const panel = document.getElementById('editPanel');
-  const header = panel.querySelector('.panel-header');
-  let pd = false, ps = {x:0,y:0};
-  header.addEventListener('mousedown', e => { pd = true; ps = {x: e.clientX - panel.offsetLeft, y: e.clientY - panel.offsetTop}; });
-  document.addEventListener('mousemove', e => { if (pd) { panel.style.left = (e.clientX - ps.x) + 'px'; panel.style.top = (e.clientY - ps.y) + 'px'; } });
-  document.addEventListener('mouseup', () => pd = false);
-
-  // Panel resize
-  const rh = document.getElementById('resizeHandle');
-  let pr = false, prs = {};
-  rh.addEventListener('mousedown', e => { e.preventDefault(); pr = true; prs = {x: e.clientX, y: e.clientY, w: panel.offsetWidth, h: panel.offsetHeight}; });
-  document.addEventListener('mousemove', e => {
-    if (pr) {
-      panel.style.width = Math.max(240, prs.w + e.clientX - prs.x) + 'px';
-      panel.style.height = Math.max(280, prs.h + e.clientY - prs.y) + 'px';
-    }
-  });
-  document.addEventListener('mouseup', () => pr = false);
+  canvas.addEventListener('dblclick', onDbl);
 }
 
-function findNodeAt(x, y) {
-  const cx = (x - panX) / scale, cy = (y - panY) / scale;
-  for (let n of notes) {
-    const w = n.width || NODE_RADIUS * 2.5, h = n.height || NODE_RADIUS * 1.5;
-    if (cx >= n.x - w && cx <= n.x + w && cy >= n.y - h && cy <= n.y + h) return n;
+function nodeAt(x, y) {
+  const cx = (x - panX)/sc, cy = (y - panY)/sc;
+  for (let n of [...notes].reverse()) {
+    const w = n.w||NR*2.5, h = n.h||NR*1.5;
+    if (cx >= n.x-w && cx <= n.x+w && cy >= n.y-h && cy <= n.y+h) return n;
   }
   return null;
 }
 
-function getResizeHandle(x, y) {
-  if (!selectedNote) return null;
-  const n = getNote(selectedNote); if (!n) return null;
-  const cx = (x - panX) / scale, cy = (y - panY) / scale;
-  const w = n.width || NODE_RADIUS * 2.5, h = n.height || NODE_RADIUS * 1.5;
-  const hs = 15;
-  if (cx >= n.x + w - hs && cx <= n.x + w && cy >= n.y + h - hs && cy <= n.y + h) return 'br';
-  return null;
+function resizeHandle(x, y) {
+  if (!sel) return false;
+  const n = getNote(sel); if (!n) return false;
+  const cx = (x-panX)/sc, cy = (y-panY)/sc;
+  const w = n.w||NR*2.5, h = n.h||NR*1.5, s = 15;
+  return cx >= n.x+w-s && cx <= n.x+w && cy >= n.y+h-s && cy <= n.y+h;
 }
 
-function onMouseDown(e) {
-  const r = canvas.getBoundingClientRect();
-  const x = e.clientX - r.left, y = e.clientY - r.top;
+function onMD(e) {
+  const r = canvas.getBoundingClientRect(), x = e.clientX-r.left, y = e.clientY-r.top;
   if (connecting) {
-    const n = findNodeAt(x, y);
-    if (n && n.id !== selectedNote) {
-      const exists = connections.some(c => (c.from === selectedNote && c.to === n.id) || (c.from === n.id && c.to === selectedNote));
-      if (!exists) { connections.push({from: selectedNote, to: n.id}); updateConnectionsList(); saveData(); }
+    const n = nodeAt(x, y);
+    if (n && n.id !== sel) {
+      if (!conns.some(c => (c.f===sel&&c.t===n.id)||(c.f===n.id&&c.t===sel)))
+        conns.push({f:sel, t:n.id});
+      updateConns(); saveData();
     }
-    connecting = false;
-    document.getElementById('modeIndicator').style.display = 'none';
-    return;
+    connecting = false; document.getElementById('modePill').style.display='none'; return;
   }
-  if (getResizeHandle(x, y)) { resizingNote = getNote(selectedNote); dragStart = {x, y}; return; }
-  draggedNode = findNodeAt(x, y);
-  isDragging = true; dragStart = {x, y};
+  if (resizeHandle(x,y)) { resizeNode = getNote(sel); dragStart={x,y}; return; }
+  dragNode = nodeAt(x,y); dragging = true; dragStart = {x,y};
 }
 
-function onMouseMove(e) {
-  const r = canvas.getBoundingClientRect();
-  const x = e.clientX - r.left, y = e.clientY - r.top;
-  hoveredNode = findNodeAt(x, y);
-  canvas.style.cursor = getResizeHandle(x, y) ? 'nwse-resize' : (hoveredNode ? 'pointer' : 'default');
-  if (resizingNote) {
-    const dx = (x - dragStart.x) / scale, dy = (y - dragStart.y) / scale;
-    resizingNote.width = Math.max(20, (resizingNote.width || NODE_RADIUS*2.5) + dx);
-    resizingNote.height = Math.max(15, (resizingNote.height || NODE_RADIUS*1.5) + dy);
-    dragStart = {x, y}; return;
+function onMM(e) {
+  const r = canvas.getBoundingClientRect(), x = e.clientX-r.left, y = e.clientY-r.top;
+  hovered = nodeAt(x,y);
+  canvas.style.cursor = resizeHandle(x,y) ? 'nwse-resize' : (hovered ? 'pointer' : 'default');
+  if (resizeNode) {
+    const dx=(x-dragStart.x)/sc, dy=(y-dragStart.y)/sc;
+    resizeNode.w = Math.max(20,(resizeNode.w||NR*2.5)+dx);
+    resizeNode.h = Math.max(15,(resizeNode.h||NR*1.5)+dy);
+    dragStart={x,y}; return;
   }
-  if (!isDragging) return;
-  if (draggedNode) {
-    const dx = (x - dragStart.x) / scale, dy = (y - dragStart.y) / scale;
-    draggedNode.x += dx; draggedNode.y += dy;
+  if (!dragging) return;
+  if (dragNode) {
+    dragNode.x += (x-dragStart.x)/sc; dragNode.y += (y-dragStart.y)/sc;
   } else {
-    panX += x - dragStart.x; panY += y - dragStart.y;
+    panX += x-dragStart.x; panY += y-dragStart.y;
   }
-  dragStart = {x, y};
+  dragStart = {x,y};
 }
 
-function onMouseUp(e) {
-  const r = canvas.getBoundingClientRect();
-  const x = e.clientX - r.left, y = e.clientY - r.top;
-  if (resizingNote) { saveData(); resizingNote = null; return; }
-  if (isDragging && !draggedNode && Math.hypot(x - dragStart.x, y - dragStart.y) < 5) {
-    const n = findNodeAt(x, y);
-    if (n) { selectedNote = n.id; openEditPanel(); }
+function onMU(e) {
+  const r = canvas.getBoundingClientRect(), x = e.clientX-r.left, y = e.clientY-r.top;
+  if (resizeNode) { saveData(); resizeNode=null; return; }
+  if (dragging && !dragNode && Math.hypot(x-dragStart.x, y-dragStart.y) < 5) {
+    const n = nodeAt(x,y);
+    if (n) { sel=n.id; openEditor(); updateUI(); }
   }
-  isDragging = false; draggedNode = null; saveData();
+  dragging=false; dragNode=null; saveData();
 }
 
-function onDblClick(e) {
-  const r = canvas.getBoundingClientRect();
-  const x = e.clientX - r.left, y = e.clientY - r.top;
-  if (!findNodeAt(x, y)) {
-    const wx = (x - panX) / scale, wy = (y - panY) / scale;
-    createNewNote(wx, wy);
-  }
+function onDbl(e) {
+  const r = canvas.getBoundingClientRect(), x = e.clientX-r.left, y = e.clientY-r.top;
+  if (!nodeAt(x,y)) createNewNote((x-panX)/sc, (y-panY)/sc);
 }
 
 function onWheel(e) {
   e.preventDefault();
-  const f = e.deltaY < 0 ? 1.1 : 0.9;
-  scale = Math.max(0.1, Math.min(4, scale * f));
+  sc = Math.max(0.1, Math.min(4, sc * (e.deltaY < 0 ? 1.1 : 0.9)));
 }
 
-// Physics
-function updatePhysics() {
+/* ── Physics ── */
+function physics() {
   for (let n of notes) {
-    if (n === draggedNode || n === resizingNote) continue;
-    let fx = 0, fy = 0;
-    for (let c of connections) {
-      const other = c.from === n.id ? getNote(c.to) : c.to === n.id ? getNote(c.from) : null;
-      if (other) { const dx = other.x - n.x, dy = other.y - n.y, d = Math.hypot(dx,dy)||1; fx += (dx/d)*NODE_SPRING; fy += (dy/d)*NODE_SPRING; }
+    if (n===dragNode||n===resizeNode) continue;
+    let fx=0, fy=0;
+    for (let c of conns) {
+      const o = c.f===n.id?getNote(c.t):c.t===n.id?getNote(c.f):null;
+      if (o) { const dx=o.x-n.x,dy=o.y-n.y,d=Math.hypot(dx,dy)||1; fx+=(dx/d)*SPRING; fy+=(dy/d)*SPRING; }
     }
     for (let o of notes) {
-      if (o.id !== n.id) { const dx = n.x - o.x, dy = n.y - o.y, d = Math.hypot(dx,dy)||1; if (d < 300) { fx += (dx/d)*(NODE_REPULSION/(d*d)); fy += (dy/d)*(NODE_REPULSION/(d*d)); } }
+      if (o.id!==n.id) { const dx=n.x-o.x,dy=n.y-o.y,d=Math.hypot(dx,dy)||1; if(d<300){fx+=(dx/d)*(REPUL/(d*d));fy+=(dy/d)*(REPUL/(d*d));} }
     }
-    n.vx = (n.vx + fx) * DAMPING; n.vy = (n.vy + fy) * DAMPING;
-    n.x += n.vx; n.y += n.vy;
+    n.vx=(n.vx+fx)*DAMP; n.vy=(n.vy+fy)*DAMP; n.x+=n.vx; n.y+=n.vy;
   }
 }
 
-// Draw
+/* ── Draw ── */
 function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#0a0a12';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='#0a0a12'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  // dots
+  ctx.fillStyle='rgba(255,255,255,0.03)';
+  const gs=40*sc, ox=panX%gs, oy=panY%gs;
+  for(let x=ox;x<canvas.width;x+=gs) for(let y=oy;y<canvas.height;y+=gs){ctx.beginPath();ctx.arc(x,y,1,0,Math.PI*2);ctx.fill();}
 
-  // Grid dots
-  ctx.save();
-  ctx.fillStyle = 'rgba(255,255,255,0.04)';
-  const gs = 40 * scale;
-  const ox = panX % gs, oy = panY % gs;
-  for (let x = ox; x < canvas.width; x += gs)
-    for (let y = oy; y < canvas.height; y += gs) {
-      ctx.beginPath(); ctx.arc(x, y, 1, 0, Math.PI*2); ctx.fill();
-    }
-  ctx.restore();
+  ctx.save(); ctx.translate(panX,panY); ctx.scale(sc,sc);
 
-  ctx.save(); ctx.translate(panX, panY); ctx.scale(scale, scale);
-
-  // Connections
-  for (let c of connections) {
-    const f = getNote(c.from), t = getNote(c.to); if (!f || !t) continue;
-    const fw = (f.width||NODE_RADIUS*2.5), fh = (f.height||NODE_RADIUS*1.5);
-    const tw = (t.width||NODE_RADIUS*2.5), th = (t.height||NODE_RADIUS*1.5);
-    const dx = t.x - f.x, dy = t.y - f.y, dist = Math.hypot(dx,dy)||1;
-    const ux = dx/dist, uy = dy/dist;
-    const t1 = Math.min(ux!==0?fw/Math.abs(ux):Infinity, uy!==0?fh/Math.abs(uy):Infinity);
-    const t2 = Math.min(ux!==0?tw/Math.abs(ux):Infinity, uy!==0?th/Math.abs(uy):Infinity);
-    const sx = f.x + ux*t1, sy = f.y + uy*t1, ex = t.x - ux*t2, ey = t.y - uy*t2;
+  // connections
+  for (let c of conns) {
+    const f=getNote(c.f), t=getNote(c.t); if(!f||!t) continue;
+    const fw=f.w||NR*2.5, fh=f.h||NR*1.5, tw=t.w||NR*2.5, th=t.h||NR*1.5;
+    const dx=t.x-f.x, dy=t.y-f.y, dist=Math.hypot(dx,dy)||1, ux=dx/dist, uy=dy/dist;
+    const t1=Math.min(ux?fw/Math.abs(ux):Infinity, uy?fh/Math.abs(uy):Infinity);
+    const t2=Math.min(ux?tw/Math.abs(ux):Infinity, uy?th/Math.abs(uy):Infinity);
+    const sx=f.x+ux*t1, sy=f.y+uy*t1, ex=t.x-ux*t2, ey=t.y-uy*t2;
     ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex,ey);
-    ctx.lineWidth = 5/scale; ctx.strokeStyle = 'rgba(0,0,0,0.8)'; ctx.stroke();
+    ctx.lineWidth=5/sc; ctx.strokeStyle='rgba(0,0,0,0.9)'; ctx.stroke();
     ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex,ey);
-    ctx.lineWidth = 2/scale; ctx.strokeStyle = 'rgba(6,182,212,0.75)'; ctx.stroke();
+    ctx.lineWidth=1.5/sc; ctx.strokeStyle='rgba(6,182,212,0.6)'; ctx.stroke();
   }
 
-  // Notes
+  // nodes
   for (let n of notes) {
-    const w = n.width||NODE_RADIUS*2.5, h = n.height||NODE_RADIUS*1.5;
-    const isSel = n.id === selectedNote, isHov = n.id === hoveredNode?.id;
+    const w=n.w||NR*2.5, h=n.h||NR*1.5;
+    const isSel=n.id===sel, isHov=n.id===hovered?.id;
     ctx.save();
-    ctx.shadowColor = isSel ? '#06b6d4' : n.color;
-    ctx.shadowBlur = isSel ? 30/scale : 15/scale;
-    ctx.fillStyle = 'rgba(6,182,212,0.1)';
-    ctx.fillRect(n.x - w, n.y - h, w*2, h*2);
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = n.color + (isSel ? '20' : isHov ? '15' : '0a');
-    ctx.fillRect(n.x - w + 1, n.y - h + 1, w*2 - 2, h*2 - 2);
-    ctx.strokeStyle = isSel ? '#fff' : n.color + '60';
-    ctx.lineWidth = (isSel ? 2 : 1) / scale;
-    ctx.strokeRect(n.x - w, n.y - h, w*2, h*2);
+    if (isSel) { ctx.shadowColor=n.color; ctx.shadowBlur=20/sc; }
+    ctx.fillStyle='rgba(6,182,212,0.07)'; ctx.fillRect(n.x-w,n.y-h,w*2,h*2);
+    ctx.shadowBlur=0;
+    ctx.fillStyle=n.color+(isSel?'1a':isHov?'12':'08');
+    ctx.fillRect(n.x-w+1,n.y-h+1,w*2-2,h*2-2);
+    ctx.strokeStyle=isSel?n.color:n.color+'55';
+    ctx.lineWidth=(isSel?1.5:0.8)/sc;
+    ctx.strokeRect(n.x-w,n.y-h,w*2,h*2);
     ctx.restore();
 
-    // Text
-    const fs = 12/scale, cfs = 10/scale, pad = 8/scale, left = n.x - w + pad, top = n.y - h + pad, cw = w*2 - pad*2;
-    ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-    ctx.font = `600 ${fs}px 'Segoe UI',sans-serif`;
+    const fs=11/sc, pad=8/sc, left=n.x-w+pad, top=n.y-h+pad, cw=w*2-pad*2;
+    ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.textAlign='left'; ctx.textBaseline='top';
+    ctx.font=`500 ${fs}px Inter,sans-serif`;
     ctx.fillText(n.title||'Untitled', left, top, cw);
-    ctx.font = `${cfs}px 'Segoe UI',sans-serif`; ctx.fillStyle = 'rgba(255,255,255,0.65)';
-    const raw = (n.content||'').replace(/\n/g,' ').trim();
-    const words = raw.split(/\s+/); let line = '';
-    const lh = Math.max(cfs+4/scale, 13/scale); let cy2 = top + fs + 5/scale;
-    const mh = h*2 - (fs + pad*2 + 5/scale), ml = Math.max(1, Math.floor(mh/lh)); let dl = 0;
-    for (let i = 0; i < words.length; i++) {
-      const test = line ? line+' '+words[i] : words[i];
-      if (ctx.measureText(test).width > cw && line) {
-        if (dl < ml) { ctx.fillText(line, left, cy2); dl++; cy2 += lh; } line = words[i];
-      } else line = test;
+    const cfs=9/sc; ctx.font=`300 ${cfs}px Inter,sans-serif`; ctx.fillStyle='rgba(255,255,255,0.4)';
+    const raw=(n.content||'').replace(/\n/g,' ').trim();
+    if (raw) {
+      const words=raw.split(/\s+/); let line='';
+      const lh=Math.max(cfs+3/sc,11/sc); let cy2=top+fs+5/sc;
+      const mh=h*2-(fs+pad*2+5/sc), ml=Math.max(1,Math.floor(mh/lh)); let dl=0;
+      for (let i=0;i<words.length;i++){
+        const test=line?line+' '+words[i]:words[i];
+        if(ctx.measureText(test).width>cw&&line){if(dl<ml){ctx.fillText(line,left,cy2);dl++;cy2+=lh;}line=words[i];}else line=test;
+      }
+      if(line&&dl<ml) ctx.fillText(line,left,cy2);
     }
-    if (line && dl < ml) ctx.fillText(line, left, cy2);
-
-    // Resize handle
     if (isSel) {
-      const hs = 12/scale;
-      ctx.fillStyle = '#06b6d4';
-      ctx.beginPath(); ctx.moveTo(n.x+w, n.y+h); ctx.lineTo(n.x+w-hs, n.y+h); ctx.lineTo(n.x+w, n.y+h-hs); ctx.closePath(); ctx.fill();
+      const hs=10/sc; ctx.fillStyle=n.color+'cc';
+      ctx.beginPath(); ctx.moveTo(n.x+w,n.y+h); ctx.lineTo(n.x+w-hs,n.y+h); ctx.lineTo(n.x+w,n.y+h-hs); ctx.closePath(); ctx.fill();
     }
   }
   ctx.restore();
 }
 
-function animate() { updatePhysics(); draw(); requestAnimationFrame(animate); }
+function animate() { physics(); draw(); requestAnimationFrame(animate); }
 
-// Notes CRUD
+/* ── Notes CRUD ── */
 function createNewNote(wx, wy) {
   const note = {
-    id: Date.now(), title: 'New Note', content: '',
-    x: wx !== undefined ? wx : (canvas.width/2 - panX)/scale,
-    y: wy !== undefined ? wy : (canvas.height/2 - panY)/scale,
-    vx: 0, vy: 0, color: COLORS[notes.length % COLORS.length],
-    width: NODE_RADIUS*2.5, height: NODE_RADIUS*1.5
+    id: Date.now(), title: 'New note', content: '',
+    x: wx!==undefined ? wx : (canvas.width/2-panX)/sc,
+    y: wy!==undefined ? wy : (canvas.height/2-panY)/sc,
+    vx:0, vy:0, color: COLORS[notes.length%COLORS.length],
+    w: NR*2.5, h: NR*1.5
   };
-  notes.push(note); selectedNote = note.id;
-  saveData(); updateUI(); openEditPanel();
+  notes.push(note); sel=note.id;
+  saveData(); updateUI(); openEditor();
 }
 
 function deleteNote(id) {
-  notes = notes.filter(n => n.id !== id);
-  connections = connections.filter(c => c.from !== id && c.to !== id);
-  if (selectedNote === id) { selectedNote = null; closeEditPanel(); }
+  notes = notes.filter(n=>n.id!==id);
+  conns = conns.filter(c=>c.f!==id&&c.t!==id);
+  if (sel===id) { sel=null; closeEditor(); }
   saveData(); updateUI();
 }
 
-function getNote(id) { return notes.find(n => n.id === id); }
+function getNote(id) { return notes.find(n=>n.id===id); }
 
+/* ── UI ── */
 function updateUI() {
   const list = document.getElementById('notesList');
-  const empty = document.getElementById('emptyState');
-  list.innerHTML = '';
-  empty.style.display = notes.length === 0 ? 'block' : 'none';
+  const hint = document.getElementById('emptyHint');
+  const count = document.getElementById('noteCount');
+  count.textContent = notes.length;
+  // remove old items
+  [...list.querySelectorAll('.note-item')].forEach(el=>el.remove());
+  hint.style.display = notes.length===0 ? 'block' : 'none';
   for (let n of notes) {
-    const item = document.createElement('div');
-    item.className = 'note-item' + (n.id === selectedNote ? ' active' : '');
-    item.innerHTML = `<span class="note-dot" style="background:${n.color}"></span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(n.title)}</span><span class="del-btn" onclick="event.stopPropagation();deleteNote(${n.id})">✕</span>`;
-    item.addEventListener('click', () => { selectedNote = n.id; openEditPanel(); updateUI(); });
-    list.appendChild(item);
+    const el = document.createElement('div');
+    el.className = 'note-item'+(n.id===sel?' active':'');
+    el.innerHTML = `<span class="note-dot" style="background:${n.color}"></span><span class="note-title-text">${esc(n.title||'Untitled')}</span><span class="note-del" onclick="event.stopPropagation();deleteNote(${n.id})">✕</span>`;
+    el.addEventListener('click', () => { sel=n.id; openEditor(); updateUI(); });
+    list.appendChild(el);
   }
 }
 
-function openEditPanel() {
-  const n = getNote(selectedNote); if (!n) return;
-  document.getElementById('noteTitle').value = n.title;
+function openEditor() {
+  const n = getNote(sel); if (!n) return;
+  document.getElementById('editorEmpty').style.display='none';
+  document.getElementById('editorActive').style.display='flex';
+  const ti = document.getElementById('noteTitle');
+  ti.value = n.title; autoResize(ti);
   document.getElementById('noteContent').value = n.content;
-  document.querySelectorAll('.swatch').forEach(s => s.classList.toggle('active', s.dataset.color === n.color));
-  updateConnectionsList();
-  document.getElementById('editPanel').style.display = 'flex';
-  updateUI();
+  document.getElementById('editorAccent').style.background = n.color;
+  document.querySelectorAll('.cdot').forEach(d => d.classList.toggle('active', d.dataset.color===n.color));
+  updateConns();
 }
 
-function closeEditPanel() {
-  document.getElementById('editPanel').style.display = 'none';
-  connecting = false; document.getElementById('modeIndicator').style.display = 'none';
+function closeEditor() {
+  document.getElementById('editorEmpty').style.display='flex';
+  document.getElementById('editorActive').style.display='none';
 }
 
 function liveUpdate() {
-  if (!selectedNote) return;
-  const n = getNote(selectedNote); if (!n) return;
+  if (!sel) return;
+  const n = getNote(sel); if (!n) return;
   n.title = document.getElementById('noteTitle').value || 'Untitled';
   n.content = document.getElementById('noteContent').value;
-  updateUI();
+  // update sidebar title live
+  const el = document.querySelector(`.note-item.active .note-title-text`);
+  if (el) el.textContent = esc(n.title);
+  // flash saved off
+  document.getElementById('savedIndicator').classList.remove('visible');
 }
 
 function saveNote() {
-  liveUpdate(); saveData(); showToast('Note saved');
+  liveUpdate(); saveData();
+  const si = document.getElementById('savedIndicator');
+  si.classList.add('visible');
+  setTimeout(()=>si.classList.remove('visible'), 2000);
+  showToast('Saved');
 }
 
 function addConnectionMode() {
-  connecting = true;
-  document.getElementById('modeIndicator').style.display = 'block';
+  if (!sel) return;
+  connecting=true; document.getElementById('modePill').style.display='block';
 }
 
-function updateConnectionsList() {
-  const list = document.getElementById('connectionsList'); list.innerHTML = '';
-  for (let c of connections) {
-    if (c.from !== selectedNote && c.to !== selectedNote) continue;
-    const otherId = c.from === selectedNote ? c.to : c.from;
-    const other = getNote(otherId); if (!other) continue;
-    const arrow = c.from === selectedNote ? '→' : '←';
-    const item = document.createElement('div');
-    item.className = 'conn-item';
-    item.innerHTML = `<span>${arrow} ${esc(other.title)}</span><span class="conn-remove" onclick="removeConn(${c.from},${c.to})">✕</span>`;
-    list.appendChild(item);
+function updateConns() {
+  const list = document.getElementById('connectionsList');
+  const sect = document.getElementById('connSection');
+  list.innerHTML='';
+  const mine = conns.filter(c=>c.f===sel||c.t===sel);
+  sect.style.display = mine.length ? 'block' : 'none';
+  for (let c of mine) {
+    const oid = c.f===sel?c.t:c.f, o=getNote(oid); if(!o) continue;
+    const arrow = c.f===sel?'→':'←';
+    const el = document.createElement('div'); el.className='conn-item';
+    el.innerHTML=`<span>${arrow} ${esc(o.title)}</span><span class="conn-remove" onclick="removeConn(${c.f},${c.t})">✕</span>`;
+    list.appendChild(el);
   }
 }
 
-function removeConn(from, to) {
-  connections = connections.filter(c => !(c.from === from && c.to === to));
-  updateConnectionsList(); saveData();
+function removeConn(f, t) {
+  conns = conns.filter(c=>!(c.f===f&&c.t===t));
+  updateConns(); saveData();
 }
 
 function clearAll() {
   if (!confirm('Delete all notes and connections?')) return;
-  notes = []; connections = []; selectedNote = null;
-  closeEditPanel(); saveData(); updateUI();
+  notes=[]; conns=[]; sel=null; closeEditor(); saveData(); updateUI();
 }
 
 function newDocument() {
-  if (notes.length && !confirm('Start a new document? Unsaved local changes will be kept in localStorage.')) return;
-  notes = []; connections = []; panX = 0; panY = 0; scale = 1; selectedNote = null;
-  closeEditPanel(); saveData(); updateUI();
+  if (notes.length && !confirm('Start fresh? Current notes stay in localStorage.')) return;
+  notes=[]; conns=[]; panX=0; panY=0; sc=1; sel=null;
+  closeEditor(); saveData(); updateUI();
 }
 
-// Storage
+/* ── Storage ── */
 function saveData() {
-  try {
-    localStorage.setItem('docx_notes', JSON.stringify(notes));
-    localStorage.setItem('docx_connections', JSON.stringify(connections));
-  } catch(e) {}
+  try { localStorage.setItem('docx_notes',JSON.stringify(notes)); localStorage.setItem('docx_conns',JSON.stringify(conns)); } catch(e){}
 }
-
 function loadData() {
   try {
-    const n = localStorage.getItem('docx_notes');
-    const c = localStorage.getItem('docx_connections');
-    if (n) notes = JSON.parse(n);
-    if (c) connections = JSON.parse(c);
-  } catch(e) {}
+    const n=localStorage.getItem('docx_notes'), c=localStorage.getItem('docx_conns')||localStorage.getItem('docx_connections');
+    if(n) notes=JSON.parse(n); if(c) conns=JSON.parse(c).map(x=>({f:x.f||x.from,t:x.t||x.to}));
+  } catch(e){}
 }
 
-// ── EXPORT JSON ──────────────────────────────────────────────
+/* ── Export / Import ── */
 function exportJSON() {
-  const payload = {
-    meta: { app: 'DocX', exported: new Date().toISOString(), noteCount: notes.length, connectionCount: connections.length },
-    notes, connections, view: { panX, panY, scale }
-  };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `docx_backup_${Date.now()}.json`;
-  document.body.appendChild(a); a.click(); a.remove();
-  URL.revokeObjectURL(url);
+  const payload = { meta:{app:'DocX',exported:new Date().toISOString()}, notes, connections:conns, view:{panX,panY,scale:sc} };
+  const blob = new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href=url; a.download=`docx_${Date.now()}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
   showToast(`Exported ${notes.length} notes`);
 }
 
-// ── IMPORT JSON ──────────────────────────────────────────────
 function importJSON(e) {
-  const file = e.target.files && e.target.files[0];
-  if (!file) return;
+  const file = e.target.files&&e.target.files[0]; if(!file) return;
   const reader = new FileReader();
   reader.onload = () => {
     try {
       const obj = JSON.parse(reader.result);
-      let importedNotes = [], importedConns = [], ipx = 0, ipy = 0, isc = 1;
-
-      // Support multiple formats
-      if (obj.notes && Array.isArray(obj.notes)) importedNotes = obj.notes;
-      else if (obj.payload?.notes) importedNotes = obj.payload.notes;
-
-      if (obj.connections && Array.isArray(obj.connections)) importedConns = obj.connections;
-      else if (obj.payload?.connections) importedConns = obj.payload.connections;
-
-      if (obj.view) { ipx = obj.view.panX||0; ipy = obj.view.panY||0; isc = obj.view.scale||1; }
-      else if (obj.payload) { ipx = obj.payload.panX||0; ipy = obj.payload.panY||0; isc = obj.payload.scale||1; }
-
-      if (!importedNotes.length && !importedConns.length) {
-        showToast('No valid notes found in file', true); return;
-      }
-
-      if (!confirm(`Import ${importedNotes.length} note(s) and ${importedConns.length} connection(s)?\n\nThis will replace your current notes.`)) return;
-
-      notes = importedNotes; connections = importedConns;
-      panX = ipx; panY = ipy; scale = isc;
-      selectedNote = null; closeEditPanel(); saveData(); updateUI();
+      let iN=[], iC=[], ipx=0, ipy=0, isc=1;
+      if(obj.notes&&Array.isArray(obj.notes)) iN=obj.notes;
+      else if(obj.payload?.notes) iN=obj.payload.notes;
+      const rawC = obj.connections||obj.payload?.connections||[];
+      iC = rawC.map(x=>({f:x.f||x.from,t:x.t||x.to}));
+      if(obj.view){ipx=obj.view.panX||0;ipy=obj.view.panY||0;isc=obj.view.scale||1;}
+      if(!iN.length) { showToast('No notes found in file',true); return; }
+      if(!confirm(`Import ${iN.length} note(s)? This replaces current notes.`)) return;
+      notes=iN; conns=iC; panX=ipx; panY=ipy; sc=isc;
+      sel=null; closeEditor(); saveData(); updateUI();
       showToast(`Imported ${notes.length} notes`);
-    } catch(err) {
-      showToast('Invalid JSON file: ' + err.message, true);
-    }
+    } catch(err) { showToast('Invalid file: '+err.message,true); }
   };
-  reader.readAsText(file);
-  e.target.value = '';
+  reader.readAsText(file); e.target.value='';
 }
 
-// Helpers
-function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+/* ── Helpers ── */
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-function showToast(msg, isError = false) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (isError ? ' error' : '');
-  clearTimeout(t._timeout);
-  t._timeout = setTimeout(() => t.className = 'toast', 2800);
+function showToast(msg,isErr=false){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast show'+(isErr?' err':'');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.className='toast',2500);
 }
 </script>
 </body>
