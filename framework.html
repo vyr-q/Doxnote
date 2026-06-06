@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DocX Framework v2</title>
+
+<style>
+:root{
+    --bg:#0b1220;
+    --panel:#111827;
+    --accent:#06b6d4;
+    --text:#dbeafe;
+}
+
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+body{
+    font-family:Inter,Segoe UI,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+}
+
+.header{
+    height:60px;
+    background:#071029;
+    border-bottom:1px solid rgba(255,255,255,.08);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:0 15px;
+}
+
+.logo{
+    font-weight:700;
+    color:var(--accent);
+}
+
+.spacer{
+    flex:1;
+}
+
+button{
+    background:var(--accent);
+    color:white;
+    border:none;
+    padding:8px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    transition:.2s;
+}
+
+button:hover{
+    opacity:.85;
+}
+
+.main{
+    flex:1;
+    display:flex;
+    overflow:hidden;
+}
+
+.tree{
+    flex:1;
+    overflow:auto;
+    padding:20px;
+}
+
+.editor{
+    width:320px;
+    background:var(--panel);
+    border-left:1px solid rgba(255,255,255,.08);
+    padding:15px;
+}
+
+.editor h3{
+    margin-bottom:10px;
+}
+
+.editor input,
+.editor textarea,
+.editor select{
+    width:100%;
+    padding:10px;
+    margin-bottom:10px;
+    background:#1f2937;
+    color:white;
+    border:none;
+    border-radius:6px;
+}
+
+.editor textarea{
+    min-height:140px;
+    resize:vertical;
+}
+
+.node{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    padding:8px 10px;
+    margin:4px 0;
+    border-radius:8px;
+    cursor:pointer;
+
+    transition:
+        background .2s ease,
+        transform .15s ease;
+
+    animation:fadeIn .25s ease;
+}
+
+.node:hover{
+    background:rgba(255,255,255,.05);
+    transform:translateX(3px);
+}
+
+.selected{
+    outline:2px solid var(--accent);
+}
+
+.arrow{
+    width:18px;
+    text-align:center;
+    display:inline-block;
+    transition:transform .25s ease;
+    user-select:none;
+}
+
+.arrow.collapsed{
+    transform:rotate(-90deg);
+}
+
+.children{
+    margin-left:24px;
+    overflow:hidden;
+
+    max-height:3000px;
+    opacity:1;
+
+    transition:
+        max-height .35s ease,
+        opacity .25s ease,
+        transform .35s ease;
+
+    transform:translateY(0);
+}
+
+.children.collapsed{
+    max-height:0;
+    opacity:0;
+    transform:translateY(-8px);
+    pointer-events:none;
+}
+
+@keyframes fadeIn{
+    from{
+        opacity:0;
+        transform:translateY(-5px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo">🕸️ DocX Framework v2</div>
+
+    <button onclick="addParent()">+ Parent</button>
+    <button onclick="addChild()">+ Child</button>
+
+    <button onclick="exportFramework()">
+        Export
+    </button>
+
+    <button onclick="document.getElementById('importFile').click()">
+        Import
+    </button>
+
+    <input
+        id="importFile"
+        type="file"
+        accept=".json"
+        style="display:none"
+        onchange="importFramework(event)"
+    >
+
+    <div class="spacer"></div>
+</div>
+
+<div class="main">
+
+    <div id="tree" class="tree"></div>
+
+    <div class="editor">
+
+        <h3>Properties</h3>
+
+        <input id="titleInput" placeholder="Title">
+
+        <input id="colorInput" type="color">
+
+        <select id="fontInput">
+            <option>Arial</option>
+            <option>Verdana</option>
+            <option>Georgia</option>
+            <option>Courier New</option>
+            <option>Trebuchet MS</option>
+            <option>Tahoma</option>
+        </select>
+
+        <textarea
+            id="descInput"
+            placeholder="Description"
+        ></textarea>
+
+    </div>
+
+</div>
+
+<script>
+
+let selectedNode = null;
+
+let framework = [
+{
+    id:1,
+    title:"Research",
+    color:"#06b6d4",
+    font:"Arial",
+    description:"",
+    collapsed:false,
+    children:[
+        {
+            id:2,
+            title:"People",
+            color:"#06b6d4",
+            font:"Arial",
+            description:"",
+            collapsed:false,
+            children:[
+                {
+                    id:3,
+                    title:"Instagram",
+                    color:"#06b6d4",
+                    font:"Arial",
+                    description:"",
+                    collapsed:false,
+                    children:[]
+                }
+            ]
+        }
+    ]
+}
+];
+
+function render(){
+
+    const tree = document.getElementById("tree");
+
+    tree.innerHTML = "";
+
+    framework.forEach(node=>{
+        tree.appendChild(createNode(node));
+    });
+
+    save();
+}
+
+function createNode(node){
+
+    const wrapper = document.createElement("div");
+
+    const row = document.createElement("div");
+
+    row.className = "node";
+
+    if(selectedNode === node){
+        row.classList.add("selected");
+    }
+
+    row.style.color = node.color;
+    row.style.fontFamily = node.font;
+
+    const arrow = document.createElement("span");
+
+    arrow.className =
+        "arrow" +
+        (node.collapsed ? " collapsed" : "");
+
+    arrow.textContent = "▼";
+
+    arrow.onclick = (e)=>{
+
+        e.stopPropagation();
+
+        node.collapsed = !node.collapsed;
+
+        render();
+    };
+
+    const title = document.createElement("span");
+    title.textContent = node.title;
+
+    row.appendChild(arrow);
+    row.appendChild(title);
+
+    row.onclick = (e)=>{
+
+        e.stopPropagation();
+
+        selectedNode = node;
+
+        openEditor(node);
+
+        render();
+    };
+
+    wrapper.appendChild(row);
+
+    const childWrap = document.createElement("div");
+
+    childWrap.className =
+        "children" +
+        (node.collapsed ? " collapsed" : "");
+
+    node.children.forEach(child=>{
+        childWrap.appendChild(
+            createNode(child)
+        );
+    });
+
+    wrapper.appendChild(childWrap);
+
+    return wrapper;
+}
+
+function openEditor(node){
+
+    titleInput.value = node.title;
+    colorInput.value = node.color;
+    fontInput.value = node.font;
+    descInput.value = node.description || "";
+
+    titleInput.oninput = ()=>{
+
+        node.title = titleInput.value;
+
+        render();
+    };
+
+    colorInput.oninput = ()=>{
+
+        node.color = colorInput.value;
+
+        render();
+    };
+
+    fontInput.onchange = ()=>{
+
+        node.font = fontInput.value;
+
+        render();
+    };
+
+    descInput.oninput = ()=>{
+
+        node.description =
+            descInput.value;
+
+        save();
+    };
+}
+
+function addParent(){
+
+    framework.push({
+        id:Date.now(),
+        title:"New Parent",
+        color:"#06b6d4",
+        font:"Arial",
+        description:"",
+        collapsed:false,
+        children:[]
+    });
+
+    render();
+}
+
+function addChild(){
+
+    if(!selectedNode){
+
+        alert(
+            "Select a parent or child node first."
+        );
+
+        return;
+    }
+
+    selectedNode.children.push({
+
+        id:Date.now(),
+
+        title:"New Child",
+
+        color:"#06b6d4",
+
+        font:"Arial",
+
+        description:"",
+
+        collapsed:false,
+
+        children:[]
+    });
+
+    selectedNode.collapsed = false;
+
+    render();
+}
+
+function exportFramework(){
+
+    const blob = new Blob(
+        [
+            JSON.stringify(
+                framework,
+                null,
+                2
+            )
+        ],
+        {
+            type:"application/json"
+        }
+    );
+
+    const a = document.createElement("a");
+
+    a.href =
+        URL.createObjectURL(blob);
+
+    a.download =
+        "docx-framework.json";
+
+    a.click();
+}
+
+function importFramework(event){
+
+    const file =
+        event.target.files[0];
+
+    if(!file) return;
+
+    const reader =
+        new FileReader();
+
+    reader.onload = ()=>{
+
+        try{
+
+            framework =
+                JSON.parse(
+                    reader.result
+                );
+
+            render();
+
+            alert("Imported");
+
+        }catch{
+
+            alert(
+                "Invalid JSON file"
+            );
+        }
+    };
+
+    reader.readAsText(file);
+}
+
+function save(){
+
+    localStorage.setItem(
+        "docx_framework_v2",
+        JSON.stringify(framework)
+    );
+}
+
+function load(){
+
+    const saved =
+        localStorage.getItem(
+            "docx_framework_v2"
+        );
+
+    if(saved){
+
+        framework =
+            JSON.parse(saved);
+    }
+
+    render();
+}
+
+load();
+
+</script>
+
+</body>
+</html>
