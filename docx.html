@@ -1,97 +1,265 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<title>DocX v2.0</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DocX Flow Network</title>
 <style>
-body{margin:0;font-family:Arial;background:#0a0a12;color:#fff;height:100vh;overflow:hidden}
-.header{height:50px;background:#111;display:flex;align-items:center;padding:0 12px;gap:10px}
-.btn{padding:8px 12px;border:1px solid #333;background:#1a1a24;color:white;border-radius:8px;cursor:pointer}
-.main{height:calc(100vh - 50px)}
-.page{display:none;height:100%}
-.page.active{display:flex}
-#canvasPage{position:relative}
-#frameworkPage{display:flex}
-#tree{width:40%;overflow:auto;padding:15px}
-#props{width:320px;border-left:1px solid #333;padding:15px;background:#111118}
-.node{padding:6px;margin-left:20px;cursor:pointer}
-.note{position:absolute;width:240px;min-height:120px;padding:12px;border-radius:12px;background:#123;box-shadow:0 0 20px cyan}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,Arial,sans-serif;background:#0a0a12;color:#e2e8f0;height:100vh;overflow:hidden}
+.header{height:50px;background:#0d0d1a;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;padding:0 15px;gap:10px}
+.logo{color:#06b6d4;font-weight:700}
+.spacer{flex:1}
+button{background:#111827;color:white;border:1px solid rgba(255,255,255,.1);padding:8px 12px;border-radius:8px;cursor:pointer}
+button:hover{opacity:.9}
+#canvasMode{position:relative;width:100%;height:calc(100vh - 50px);overflow:hidden}
+#lineCanvas{position:absolute;inset:0;pointer-events:none}
+.note{
+position:absolute;
+width:260px;
+min-height:140px;
+padding:15px;
+border-radius:14px;
+border:1px solid rgba(255,255,255,.12);
+backdrop-filter:blur(10px);
+color:white;
+cursor:move;
+}
+.note h3{margin-bottom:8px}
+.editor{
+position:absolute;
+top:0;
+right:0;
+width:320px;
+height:100%;
+background:#111118;
+border-left:1px solid rgba(255,255,255,.1);
+padding:15px;
+display:none;
+z-index:1000;
+}
+.editor input,.editor textarea,.editor select{
+width:100%;
+margin-top:8px;
+margin-bottom:12px;
+padding:10px;
+background:#1a1a24;
+color:white;
+border:none;
+border-radius:8px;
+}
+.editor textarea{height:160px;resize:vertical}
 </style>
 </head>
 <body>
+
 <div class="header">
-<b>DocX v2.0</b>
-<button class="btn" onclick="showPage('canvasPage')">Canvas</button>
-<button class="btn" onclick="showPage('frameworkPage')">Framework Builder</button>
-<button class="btn" onclick="addNote()">+ Note</button>
-<button class="btn" onclick="addRoot()">+ Category</button>
+<div class="logo">DocX Flow Network</div>
+<div class="spacer"></div>
+<button onclick="createNote()">+ New Note</button>
+<button onclick="startConnect()">Connect Notes</button>
+<button onclick="exportData()">Export</button>
 </div>
 
-<div class="main">
-<div id="canvasPage" class="page active">
-<canvas id="lines" style="position:absolute;inset:0"></canvas>
-</div>
-
-<div id="frameworkPage" class="page">
-<div id="tree"></div>
-<div id="props">
-<h3>Properties</h3>
-<input id="title" placeholder="Title" style="width:100%"><br><br>
-<input id="color" type="color" style="width:100%">
-</div>
+<div id="canvasMode">
+<canvas id="lineCanvas"></canvas>
+<div id="editor" class="editor">
+<h3>Edit Note</h3>
+<input id="titleInput">
+<textarea id="contentInput"></textarea>
+<select id="colorInput">
+<option value="#06b6d4">Cyan</option>
+<option value="#8b5cf6">Purple</option>
+<option value="#ec4899">Pink</option>
+<option value="#10b981">Green</option>
+<option value="#f59e0b">Orange</option>
+<option value="#ef4444">Red</option>
+</select>
+<button onclick="deleteSelected()">Delete Note</button>
 </div>
 </div>
 
 <script>
 let notes=[];
-let framework=[{id:1,title:"Gaming",children:[{id:2,title:"Minecraft",children:[]}]}];
+let connections=[];
+let selected=null;
+let connectMode=false;
+let firstConnect=null;
 
-function showPage(id){
-document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-document.getElementById(id).classList.add('active');
+const canvas=document.getElementById("lineCanvas");
+const ctx=canvas.getContext("2d");
+
+function resize(){
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
+drawLines();
+}
+window.addEventListener("resize",resize);
+resize();
+
+function createNote(){
+const note={
+id:Date.now(),
+x:100+Math.random()*300,
+y:100+Math.random()*200,
+title:"New Note",
+content:"",
+color:"#06b6d4"
+};
+notes.push(note);
+renderNotes();
+save();
 }
 
-function addNote(){
-const d=document.createElement('div');
-d.className='note';
-d.style.left='100px';
-d.style.top='100px';
-d.innerHTML='<h3>New Note</h3><p>Content</p>';
-document.getElementById('canvasPage').appendChild(d);
-drag(d);
+function renderNotes(){
+document.querySelectorAll(".note").forEach(n=>n.remove());
+
+notes.forEach(note=>{
+const div=document.createElement("div");
+div.className="note";
+div.style.left=note.x+"px";
+div.style.top=note.y+"px";
+div.style.background=note.color+"22";
+div.style.boxShadow="0 0 25px "+note.color;
+
+div.innerHTML=`<h3>${note.title}</h3><p>${note.content}</p>`;
+
+div.onclick=(e)=>{
+e.stopPropagation();
+
+if(connectMode){
+if(!firstConnect){
+firstConnect=note.id;
+}else{
+connections.push({from:firstConnect,to:note.id});
+firstConnect=null;
+connectMode=false;
+drawLines();
+save();
+}
+return;
 }
 
-function drag(el){
-let ox,oy,down=false;
-el.onmousedown=e=>{
-down=true;ox=e.offsetX;oy=e.offsetY;
-document.onmousemove=m=>{if(!down)return;el.style.left=(m.clientX-ox)+'px';el.style.top=(m.clientY-oy)+'px';};
-document.onmouseup=()=>down=false;
+openEditor(note);
+};
+
+makeDrag(div,note);
+
+document.getElementById("canvasMode").appendChild(div);
+});
+
+drawLines();
+}
+
+function makeDrag(el,note){
+let dragging=false,ox=0,oy=0;
+
+el.onmousedown=(e)=>{
+dragging=true;
+ox=e.clientX-note.x;
+oy=e.clientY-note.y;
+
+document.onmousemove=(ev)=>{
+if(!dragging)return;
+note.x=ev.clientX-ox;
+note.y=ev.clientY-oy;
+el.style.left=note.x+"px";
+el.style.top=note.y+"px";
+drawLines();
+};
+
+document.onmouseup=()=>{
+dragging=false;
+document.onmousemove=null;
+};
 };
 }
 
-function renderTree(){
-const tree=document.getElementById('tree');
-tree.innerHTML='';
-function make(node,parent){
-const div=document.createElement('div');
-div.className='node';
-div.textContent='▼ '+node.title;
-parent.appendChild(div);
-const wrap=document.createElement('div');
-wrap.style.marginLeft='20px';
-parent.appendChild(wrap);
-(node.children||[]).forEach(c=>make(c,wrap));
-}
-framework.forEach(n=>make(n,tree));
+function drawLines(){
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+connections.forEach(c=>{
+const a=notes.find(n=>n.id===c.from);
+const b=notes.find(n=>n.id===c.to);
+if(!a||!b)return;
+
+ctx.strokeStyle="#06b6d4";
+ctx.lineWidth=3;
+ctx.beginPath();
+ctx.moveTo(a.x+130,a.y+70);
+ctx.lineTo(b.x+130,b.y+70);
+ctx.stroke();
+});
 }
 
-function addRoot(){
-framework.push({id:Date.now(),title:'New Category',children:[]});
-renderTree();
+function openEditor(note){
+selected=note;
+editor.style.display="block";
+
+titleInput.value=note.title;
+contentInput.value=note.content;
+colorInput.value=note.color;
+
+titleInput.oninput=()=>{
+note.title=titleInput.value;
+renderNotes();
+save();
+};
+
+contentInput.oninput=()=>{
+note.content=contentInput.value;
+renderNotes();
+save();
+};
+
+colorInput.onchange=()=>{
+note.color=colorInput.value;
+renderNotes();
+save();
+};
 }
 
-renderTree();
+function deleteSelected(){
+if(!selected)return;
+
+notes=notes.filter(n=>n.id!==selected.id);
+connections=connections.filter(c=>c.from!==selected.id&&c.to!==selected.id);
+
+editor.style.display="none";
+selected=null;
+
+renderNotes();
+save();
+}
+
+function startConnect(){
+connectMode=true;
+firstConnect=null;
+alert("Click first note, then second note.");
+}
+
+function save(){
+localStorage.setItem("docx_notes",JSON.stringify(notes));
+localStorage.setItem("docx_connections",JSON.stringify(connections));
+}
+
+function load(){
+notes=JSON.parse(localStorage.getItem("docx_notes")||"[]");
+connections=JSON.parse(localStorage.getItem("docx_connections")||"[]");
+renderNotes();
+}
+
+function exportData(){
+const data={notes,connections};
+const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+const a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="docx-network.json";
+a.click();
+}
+
+load();
 </script>
+
 </body>
 </html>
