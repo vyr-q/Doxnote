@@ -3,262 +3,263 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DocX - Flow Network</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<title>DocX Flow Network</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Inter', sans-serif; background: #0a0a12; color: #e2e8f0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-.header { display: flex; align-items: center; gap: 12px; padding: 0 16px; height: 46px; background: #0d0d1a; border-bottom: 1px solid rgba(255,255,255,0.07); }
-.logo { font-size: 15px; font-weight: 600; color: #06b6d4; }
-.logo-sub { font-size: 11px; color: #334155; }
-.hspacer { flex: 1; }
-
-.mode-switch { display: flex; background: rgba(255,255,255,0.05); border-radius: 9999px; padding: 3px; border: 1px solid rgba(255,255,255,0.1); }
-.mode-btn { padding: 4px 16px; border-radius: 9999px; font-size: 11px; font-weight: 500; cursor: pointer; }
-.mode-btn.active { background: #06b6d4; color: #0a0a12; }
-
-.hbtn {
-  padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);
-  background: transparent; color: #64748b; cursor: pointer; font-size: 11px; font-weight: 500;
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,Arial,sans-serif;background:#0a0a12;color:#e2e8f0;height:100vh;overflow:hidden}
+.header{height:50px;background:#0d0d1a;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;padding:0 15px;gap:10px}
+.logo{color:#06b6d4;font-weight:700}
+.spacer{flex:1}
+button{background:#111827;color:white;border:1px solid rgba(255,255,255,.1);padding:8px 12px;border-radius:8px;cursor:pointer}
+button:hover{opacity:.9}
+#canvasMode{position:relative;width:100%;height:calc(100vh - 50px);overflow:hidden}
+#lineCanvas{position:absolute;inset:0;pointer-events:none}
+.note{
+position:absolute;
+width:260px;
+min-height:140px;
+padding:15px;
+border-radius:14px;
+border:1px solid rgba(255,255,255,.12);
+backdrop-filter:blur(10px);
+color:white;
+cursor:move;
 }
-.hbtn:hover { background: rgba(255,255,255,0.06); color: #cbd5e1; }
-.hbtn.new { background: rgba(6,182,212,0.12); color: #06b6d4; border-color: rgba(6,182,212,0.35); }
-.hbtn.new:hover { background: rgba(6,182,212,0.22); }
-.hbtn.danger { color: #f87171; }
-
-.canvas-wrap { flex: 1; position: relative; overflow: hidden; }
-canvas { display: block; width: 100%; height: 100%; }
-
-.framework-container { flex: 1; overflow: auto; padding: 20px; background: #0a0a12; }
-.framework-tree { max-width: 1100px; margin: 0 auto; }
-.parent-frame { background: #111118; border: 1px solid rgba(6,182,212,0.2); border-radius: 12px; margin-bottom: 18px; overflow: hidden; }
-.parent-header { padding: 14px 20px; background: rgba(6,182,212,0.1); display: flex; align-items: center; gap: 12px; cursor: pointer; font-weight: 600; }
-.child-notes { padding: 12px 20px 20px; }
-.child-note { background: #1a1a24; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
-.child-note input, .child-note textarea { width: 100%; background: transparent; border: none; outline: none; color: #e2e8f0; font-size: 13.5px; }
-.child-note textarea { resize: vertical; min-height: 80px; }
-
-.detail-panel {
-  width: 360px; background: #0d0d1a; border-left: 1px solid rgba(255,255,255,0.07);
-  position: absolute; right: 0; top: 0; bottom: 0; transform: translateX(100%); transition: transform 0.25s;
-  display: flex; flex-direction: column; z-index: 10;
+.note h3{margin-bottom:8px}
+.editor{
+position:absolute;
+top:0;
+right:0;
+width:320px;
+height:100%;
+background:#111118;
+border-left:1px solid rgba(255,255,255,.1);
+padding:15px;
+display:none;
+z-index:1000;
 }
-.detail-panel.open { transform: translateX(0); }
-.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(15,15,28,0.9); padding: 8px 18px; border-radius: 20px; z-index: 9999; opacity: 0; transition: opacity 0.3s; }
-.toast.show { opacity: 1; }
+.editor input,.editor textarea,.editor select{
+width:100%;
+margin-top:8px;
+margin-bottom:12px;
+padding:10px;
+background:#1a1a24;
+color:white;
+border:none;
+border-radius:8px;
+}
+.editor textarea{height:160px;resize:vertical}
 </style>
 </head>
 <body>
 
 <div class="header">
-  <span class="logo">DocX</span>
-  <span class="logo-sub">Flow Network</span>
-
-  <div class="mode-switch">
-    <div class="mode-btn active" id="btn-canvas" onclick="switchMode('canvas')">Canvas</div>
-    <div class="mode-btn" id="btn-framework" onclick="switchMode('framework')">OSINT Framework</div>
-  </div>
-
-  <div class="hspacer"></div>
-  <button class="hbtn new" onclick="createNewNote()">+ New Note</button>
-  <button class="hbtn exp" onclick="exportJSON()">↓ Export</button>
-  <button class="hbtn imp" onclick="document.getElementById('importFile').click()">↑ Import</button>
-  <input type="file" id="importFile" accept=".json" onchange="importJSON(event)" style="display:none">
-  <button class="hbtn danger" onclick="clearAll()">Clear All</button>
+<div class="logo">DocX Flow Network</div>
+<div class="spacer"></div>
+<button onclick="createNote()">+ New Note</button>
+<button onclick="startConnect()">Connect Notes</button>
+<button onclick="exportData()">Export</button>
 </div>
 
-<div class="main" style="flex:1;position:relative;display:flex">
-  <!-- Canvas Mode -->
-  <div id="canvas-mode" class="canvas-wrap">
-    <canvas id="canvas"></canvas>
-    <div class="click-hint" id="clickHint" style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:rgba(13,13,26,0.85);padding:6px 14px;border-radius:20px;font-size:11px;color:#334155;">Click node to edit · Double-click canvas to add</div>
-  </div>
-
-  <!-- Framework Mode -->
-  <div id="framework-mode" class="framework-container" style="display:none">
-    <div class="framework-tree" id="framework-tree"></div>
-    <button onclick="addNewParentFramework()" class="hbtn new" style="margin:20px auto;display:block;">+ Add New Category</button>
-  </div>
+<div id="canvasMode">
+<canvas id="lineCanvas"></canvas>
+<div id="editor" class="editor">
+<h3>Edit Note</h3>
+<input id="titleInput">
+<textarea id="contentInput"></textarea>
+<select id="colorInput">
+<option value="#06b6d4">Cyan</option>
+<option value="#8b5cf6">Purple</option>
+<option value="#ec4899">Pink</option>
+<option value="#10b981">Green</option>
+<option value="#f59e0b">Orange</option>
+<option value="#ef4444">Red</option>
+</select>
+<button onclick="deleteSelected()">Delete Note</button>
 </div>
-
-<div class="toast" id="toast"></div>
+</div>
 
 <script>
-// ==================== CANVAS + FRAMEWORK COMBINED ====================
-const COLORS = ['#06b6d4','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444','#f97316','#a3e635'];
-let notes = [], conns = [], sel = null;
-let canvas, ctx, panX = 0, panY = 0, sc = 1;
-let currentMode = 'canvas';
+let notes=[];
+let connections=[];
+let selected=null;
+let connectMode=false;
+let firstConnect=null;
 
-let frameworks = [
-  { id: 1, title: "Target Profile", children: [{ id: 101, title: "Basic Information", content: "" }] },
-  { id: 2, title: "School / Organization", children: [{ id: 201, title: "Key Contacts", content: "" }] }
-];
+const canvas=document.getElementById("lineCanvas");
+const ctx=canvas.getContext("2d");
 
-// Canvas Setup
-window.addEventListener('load', () => {
-  canvas = document.getElementById('canvas');
-  ctx = canvas.getContext('2d');
-  resizeCanvas();
-  loadData();
-  loadFramework();
-  animate();
+function resize(){
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
+drawLines();
+}
+window.addEventListener("resize",resize);
+resize();
+
+function createNote(){
+const note={
+id:Date.now(),
+x:100+Math.random()*300,
+y:100+Math.random()*200,
+title:"New Note",
+content:"",
+color:"#06b6d4"
+};
+notes.push(note);
+renderNotes();
+save();
+}
+
+function renderNotes(){
+document.querySelectorAll(".note").forEach(n=>n.remove());
+
+notes.forEach(note=>{
+const div=document.createElement("div");
+div.className="note";
+div.style.left=note.x+"px";
+div.style.top=note.y+"px";
+div.style.background=note.color+"22";
+div.style.boxShadow="0 0 25px "+note.color;
+
+div.innerHTML=`<h3>${note.title}</h3><p>${note.content}</p>`;
+
+div.onclick=(e)=>{
+e.stopPropagation();
+
+if(connectMode){
+if(!firstConnect){
+firstConnect=note.id;
+}else{
+connections.push({from:firstConnect,to:note.id});
+firstConnect=null;
+connectMode=false;
+drawLines();
+save();
+}
+return;
+}
+
+openEditor(note);
+};
+
+makeDrag(div,note);
+
+document.getElementById("canvasMode").appendChild(div);
 });
 
-function resizeCanvas() {
-  canvas.width = canvas.parentElement.clientWidth;
-  canvas.height = canvas.parentElement.clientHeight;
+drawLines();
 }
 
-function animate() { requestAnimationFrame(animate); draw(); } // Simplified for now
-function draw() {
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle = '#0a0a12';
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+function makeDrag(el,note){
+let dragging=false,ox=0,oy=0;
+
+el.onmousedown=(e)=>{
+dragging=true;
+ox=e.clientX-note.x;
+oy=e.clientY-note.y;
+
+document.onmousemove=(ev)=>{
+if(!dragging)return;
+note.x=ev.clientX-ox;
+note.y=ev.clientY-oy;
+el.style.left=note.x+"px";
+el.style.top=note.y+"px";
+drawLines();
+};
+
+document.onmouseup=()=>{
+dragging=false;
+document.onmousemove=null;
+};
+};
 }
 
-// Simple Canvas Click
-canvas.addEventListener('dblclick', (e) => {
-  if (currentMode === 'canvas') createNewNote();
+function drawLines(){
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+connections.forEach(c=>{
+const a=notes.find(n=>n.id===c.from);
+const b=notes.find(n=>n.id===c.to);
+if(!a||!b)return;
+
+ctx.strokeStyle="#06b6d4";
+ctx.lineWidth=3;
+ctx.beginPath();
+ctx.moveTo(a.x+130,a.y+70);
+ctx.lineTo(b.x+130,b.y+70);
+ctx.stroke();
 });
-
-// ==================== MODE SWITCH ====================
-function switchMode(mode) {
-  currentMode = mode;
-  document.getElementById('canvas-mode').style.display = mode === 'canvas' ? 'block' : 'none';
-  document.getElementById('framework-mode').style.display = mode === 'framework' ? 'block' : 'none';
-  document.getElementById('btn-canvas').classList.toggle('active', mode === 'canvas');
-  document.getElementById('btn-framework').classList.toggle('active', mode === 'framework');
-  if (mode === 'framework') renderFramework();
 }
 
-// ==================== FRAMEWORK FUNCTIONS ====================
-function renderFramework() {
-  const container = document.getElementById('framework-tree');
-  container.innerHTML = '';
-  frameworks.forEach(p => {
-    const div = document.createElement('div');
-    div.className = 'parent-frame';
-    div.innerHTML = `
-      <div class="parent-header" onclick="toggleFramework(this)">
-        <span>${p.title}</span>
-        <button onclick="event.stopImmediatePropagation();addChildToFramework(${p.id});" class="hbtn new" style="font-size:10px;">+ Add</button>
-      </div>
-      <div class="child-notes">
-        ${p.children.map(c => `
-          <div class="child-note">
-            <input value="${c.title}" onchange="updateChildTitle(${p.id},${c.id},this.value)">
-            <textarea onchange="updateChildContent(${p.id},${c.id},this.value)">${c.content}</textarea>
-          </div>
-        `).join('')}
-      </div>
-    `;
-    container.appendChild(div);
-  });
+function openEditor(note){
+selected=note;
+editor.style.display="block";
+
+titleInput.value=note.title;
+contentInput.value=note.content;
+colorInput.value=note.color;
+
+titleInput.oninput=()=>{
+note.title=titleInput.value;
+renderNotes();
+save();
+};
+
+contentInput.oninput=()=>{
+note.content=contentInput.value;
+renderNotes();
+save();
+};
+
+colorInput.onchange=()=>{
+note.color=colorInput.value;
+renderNotes();
+save();
+};
 }
 
-function toggleFramework(el) { 
-  const next = el.nextElementSibling;
-  next.style.display = next.style.display === 'none' ? 'block' : 'none';
+function deleteSelected(){
+if(!selected)return;
+
+notes=notes.filter(n=>n.id!==selected.id);
+connections=connections.filter(c=>c.from!==selected.id&&c.to!==selected.id);
+
+editor.style.display="none";
+selected=null;
+
+renderNotes();
+save();
 }
 
-function addNewParentFramework() {
-  const title = prompt("New Category Name:");
-  if (title) {
-    frameworks.push({ id: Date.now(), title, children: [] });
-    renderFramework();
-    saveFramework();
-  }
+function startConnect(){
+connectMode=true;
+firstConnect=null;
+alert("Click first note, then second note.");
 }
 
-function addChildToFramework(parentId) {
-  const parent = frameworks.find(p => p.id === parentId);
-  if (parent) {
-    parent.children.push({ id: Date.now(), title: "New Note", content: "" });
-    renderFramework();
-    saveFramework();
-  }
+function save(){
+localStorage.setItem("docx_notes",JSON.stringify(notes));
+localStorage.setItem("docx_connections",JSON.stringify(connections));
 }
 
-function updateChildTitle(parentId, childId, newTitle) {
-  const parent = frameworks.find(p => p.id === parentId);
-  const child = parent.children.find(c => c.id === childId);
-  if (child) child.title = newTitle;
-  saveFramework();
+function load(){
+notes=JSON.parse(localStorage.getItem("docx_notes")||"[]");
+connections=JSON.parse(localStorage.getItem("docx_connections")||"[]");
+renderNotes();
 }
 
-function updateChildContent(parentId, childId, newContent) {
-  const parent = frameworks.find(p => p.id === parentId);
-  const child = parent.children.find(c => c.id === childId);
-  if (child) child.content = newContent;
-  saveFramework();
+function exportData(){
+const data={notes,connections};
+const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+const a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="docx-network.json";
+a.click();
 }
 
-function saveFramework() { localStorage.setItem('docx_frameworks', JSON.stringify(frameworks)); }
-function loadFramework() {
-  const saved = localStorage.getItem('docx_frameworks');
-  if (saved) frameworks = JSON.parse(saved);
-}
-
-// ==================== BASIC FUNCTIONS ====================
-function createNewNote() {
-  if (currentMode === 'canvas') {
-    alert("New note created in Canvas mode (physics simulation running)");
-    // You can expand this with your full canvas logic
-  } else {
-    addNewParentFramework();
-  }
-}
-
-function exportJSON() {
-  const data = { notes, frameworks, exported: new Date().toISOString() };
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = "docx-backup.json"; a.click();
-  URL.revokeObjectURL(url);
-  showToast("Exported successfully");
-}
-
-function importJSON(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function() {
-    try {
-      const data = JSON.parse(reader.result);
-      if (data.frameworks) frameworks = data.frameworks;
-      if (data.notes) notes = data.notes;
-      renderFramework();
-      showToast("Imported successfully");
-    } catch(err) { showToast("Invalid file", true); }
-  };
-  reader.readAsText(file);
-}
-
-function clearAll() {
-  if (confirm("Clear everything?")) {
-    notes = []; frameworks = []; renderFramework();
-    showToast("Cleared");
-  }
-}
-
-function showToast(msg, err = false) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (err ? ' err' : '');
-  setTimeout(() => t.className = 'toast', 2500);
-}
-
-// Simple canvas draw for now
-function draw() {
-  ctx.fillStyle = '#0a0a12';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#06b6d4';
-  ctx.font = '20px Inter';
-  ctx.fillText('Canvas Mode Active', 50, 100);
-}
+load();
 </script>
+
 </body>
 </html>
