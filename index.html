@@ -1,0 +1,135 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>OSINT Tools - Keylocks & Archive</title>
+	<style>
+		:root{--bg:#0f1720;--card:#0b1220;--accent:#06b6d4;--text:#dbeafe}
+		body{margin:0;font-family:Inter,Segoe UI,Roboto,Helvetica,Arial;background:linear-gradient(180deg,#071029 0%,#07121a 100%);color:var(--text)}
+		header{padding:20px 24px;border-bottom:1px solid rgba(255,255,255,0.03);display:flex;align-items:center;gap:16px}
+		.brand{display:flex;gap:12px;align-items:center}
+		.logo{width:36px;height:36px;background:var(--accent);border-radius:6px;display:inline-block}
+		h1{font-size:18px;margin:0}
+		p.lead{margin:0;color:rgba(219,234,254,0.8);font-size:13px}
+		.container{display:grid;grid-template-columns:280px 1fr;gap:20px;padding:20px}
+		nav{background:var(--card);padding:16px;border-radius:8px;max-height:78vh;overflow:auto}
+		nav h3{margin:0 0 8px 0;font-size:13px;color:var(--accent)}
+		nav ul{list-style:none;padding:0;margin:0}
+		nav li{margin:6px 0}
+		nav a{display:block;padding:8px;border-radius:6px;color:var(--text);text-decoration:none;font-size:14px}
+		nav a:hover{background:rgba(255,255,255,0.02)}
+		main{padding:16px;border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent)}
+		.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+		.card{background:rgba(255,255,255,0.03);padding:12px;border-radius:8px}
+		.card h4{margin:0 0 6px 0;font-size:14px}
+		.card p{margin:0;color:rgba(219,234,254,0.8);font-size:13px}
+		.links{margin-top:8px}
+		.links a{display:block;color:var(--text);text-decoration:none;padding:6px 0;font-size:13px}
+		.header-btn{margin-left:auto;padding:8px 16px;background:var(--accent);color:white;border:none;border-radius:6px;font-size:14px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;font-weight:500;transition:background 0.2s}
+		.header-btn:hover{background:#0369a1}
+		footer{padding:12px 24px;color:rgba(219,234,254,0.6);font-size:13px}
+		@media(max-width:800px){.container{grid-template-columns:1fr}nav{max-height:220px}}
+	</style>
+</head>
+<body>
+	<header>
+		<div class="brand">
+			<span class="logo" aria-hidden></span>
+			<div>
+				<h1>Keylocks & Archive — OSINT Tools</h1>
+				<p class="lead">A curated framework of open-source intelligence resources</p>
+			</div>
+		</div>
+		<a href="docx.html" class="header-btn">📚 DocX Notes</a>
+	</header>
+
+	<div class="container">
+		<nav aria-label="categories">
+			<h3>Categories</h3>
+			<ul>
+				<li><a href="#people">People & Social Media</a></li>
+				<li><a href="#domains">Domains & IP</a></li>
+				<li><a href="#images">Images & Reverse Search</a></li>
+				<li><a href="#archives">Archives & Historical</a></li>
+				<li><a href="#documents">Documents & Metadata</a></li>
+				<li><a href="#maps">Maps & Geolocation</a></li>
+				<li><a href="#tools">Utilities</a></li>
+			</ul>
+		</nav>
+
+		<main>
+			<section id="people" class="card">
+				<h4>People & Social Media</h4>
+				<p>Search profiles, usernames, and social footprints.</p>
+				<div class="links">
+					<a href="https://intelx.io" target="_blank" rel="noopener">Intel X</a>
+					<a href="https://haveibeenpwned.com" target="_blank" rel="noopener">Have I Been Pwned</a>
+					<a href="https://socialmention.com" target="_blank" rel="noopener">Social Mention</a>
+				</div>
+			</section>
+
+			<section id="domains" class="card">
+				<h4>Domains & IP</h4>
+				<p>WHOIS, DNS, IP lookups and passive DNS.</p>
+				<div class="links">
+					<a href="https://whois.domaintools.com/" target="_blank" rel="noopener">DomainTools WHOIS</a>
+					<a href="https://www.shodan.io" target="_blank" rel="noopener">Shodan</a>
+					<a href="https://www.virustotal.com" target="_blank" rel="noopener">VirusTotal</a>
+				</div>
+			</section>
+
+			<section id="images" class="card">
+				<h4>Images & Reverse Search</h4>
+				<p>Reverse image lookup and EXIF analysis.</p>
+				<div class="links">
+					<a href="https://images.google.com" target="_blank" rel="noopener">Google Images</a>
+					<a href="https://tinyeye.com" target="_blank" rel="noopener">TinEye</a>
+					<a href="https://exif.tools" target="_blank" rel="noopener">EXIF.tools</a>
+				</div>
+			</section>
+
+			<section id="archives" class="card">
+				<h4>Archives & Historical</h4>
+				<p>Wayback, caches and historical snapshots.</p>
+				<div class="links">
+					<a href="https://web.archive.org" target="_blank" rel="noopener">Wayback Machine</a>
+					<a href="https://archive.is" target="_blank" rel="noopener">archive.today</a>
+				</div>
+			</section>
+
+			<section id="documents" class="card">
+				<h4>Documents & Metadata</h4>
+				<p>Extract metadata from files and documents.</p>
+				<div class="links">
+					<a href="https://metapicz.com" target="_blank" rel="noopener">Metapicz</a>
+					<a href="https://www.onlinehashcrack.com" target="_blank" rel="noopener">Online hash tools</a>
+				</div>
+			</section>
+
+			<section id="maps" class="card">
+				<h4>Maps & Geolocation</h4>
+				<p>Tools for geolocation and mapping.</p>
+				<div class="links">
+					<a href="https://www.openstreetmap.org" target="_blank" rel="noopener">OpenStreetMap</a>
+					<a href="https://maps.google.com" target="_blank" rel="noopener">Google Maps</a>
+				</div>
+			</section>
+
+			<section id="tools" class="card">
+				<h4>Utilities</h4>
+				<p>Helpers: converters, scanners, and more.</p>
+				<div class="links">
+					<a href="https://tools.keycdn.com/" target="_blank" rel="noopener">KeyCDN Tools</a>
+					<a href="https://ctrlq.org/" target="_blank" rel="noopener">CtrlQ</a>
+				</div>
+			</section>
+		</main>
+	</div>
+
+	<footer>
+		Curated collection for research purposes. Use responsibly.
+	</footer>
+</body>
+</html>

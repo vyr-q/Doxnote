@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>DocX Login</title>
+    <style>
+        body{font-family:Segoe UI,Arial;background:#071021;color:#e6f6fb;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+        .card{background:#071b26;padding:28px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.5);width:360px}
+        h2{margin-bottom:8px}
+        label{font-size:13px;color:#9fb8c3}
+        input{width:100%;padding:10px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:inherit;margin-bottom:12px}
+        .row{display:flex;gap:8px}
+        .btn{padding:10px 12px;border-radius:6px;border:none;background:#06b6d4;color:#042;cursor:pointer}
+        .link{background:transparent;border:1px solid rgba(255,255,255,0.04);color:#a9d9e0}
+        .muted{font-size:13px;color:#7fa3ad;margin-top:8px}
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>DocX Login</h2>
+        <div>
+            <label>Username</label>
+            <input id="username" placeholder="username">
+            <label>Password</label>
+            <input id="password" type="password" placeholder="password">
+            <div style="display:flex;gap:8px;margin-top:6px">
+                <button class="btn" id="loginBtn">Log In</button>
+                <button class="btn link" id="signupBtn">Create Account</button>
+            </div>
+            <div style="margin-top:12px;display:flex;gap:8px;justify-content:space-between;align-items:center">
+                <button id="guestBtn" class="btn link">Continue as Guest</button>
+                <a href="index.html" style="color:#9fb8c3;text-decoration:none;font-size:13px">Back</a>
+            </div>
+            <div style="margin-top:14px;border-top:1px dashed rgba(255,255,255,0.03);padding-top:12px">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <button id="checkServerBtn" class="btn link" style="padding:8px">Check Server</button>
+                    <button id="copyCmdsBtn" class="btn" style="padding:8px">Copy Start Commands</button>
+                    <button id="openServerBtn" class="btn link" style="padding:8px">Open Server</button>
+                    <span id="serverStatus" style="margin-left:auto;color:#9fb8c3;font-size:13px">Server: unknown</span>
+                </div>
+                <pre id="serverCmds" style="display:none;margin-top:8px;background:rgba(255,255,255,0.02);padding:8px;border-radius:6px;font-size:13px;color:#c6eef6">npm install
+    npm start
+
+    # Server will run on http://localhost:3000
+    # Use Ctrl+C to stop the server</pre>
+            </div>
+            <p class="muted">Accounts are stored locally in your browser only.</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.auth0.com/js/auth0-spa-js/1.29.0/auth0-spa-js.production.js"></script>
+    <script>
+        // Configure Auth0
+        const AUTH0_DOMAIN = 'dev-t8ky1sq7itz4af5f.us.auth0.com';
+        const AUTH0_CLIENT_ID = 'tSmGAkXKm5yDMDQR5tCdjfHf5EOJTJ81';
+        const AUTH0_AUDIENCE = '';
+
+        let auth0 = null;
+
+        async function initAuth0() {
+            auth0 = await createAuth0Client({
+                domain: AUTH0_DOMAIN,
+                client_id: AUTH0_CLIENT_ID,
+                cacheLocation: 'localstorage',
+                useRefreshTokens: true,
+                authorizationParams: {
+                    redirect_uri: window.location.origin + '/login.html',
+                    audience: AUTH0_AUDIENCE || undefined
+                }
+            });
+
+            // Handle redirect callback
+            if (window.location.search.includes('code=') && window.location.search.includes('state=')) {
+                try {
+                    await auth0.handleRedirectCallback();
+                } catch (err) {
+                    console.error('Callback error', err);
+                }
+                window.history.replaceState({}, document.title, '/login.html');
+            }
+
+            const isAuthenticated = await auth0.isAuthenticated();
+            if (isAuthenticated) {
+                const user = await auth0.getUser();
+                const token = await auth0.getTokenSilently();
+                localStorage.setItem('docx_token', token);
+                localStorage.setItem('docx_current_user', user.sub || user.email || user.name || 'auth0_user');
+                window.location.href = 'docx.html';
+            }
+        }
+
+        initAuth0();
+
+        document.getElementById('signupBtn').addEventListener('click', async ()=>{
+            // Redirect to Auth0 hosted signup
+            await auth0.loginWithRedirect({ authorizationParams: { screen_hint: 'signup' } });
+        });
+
+        document.getElementById('loginBtn').addEventListener('click', async ()=>{
+            await auth0.loginWithRedirect();
+        });
+
+        document.getElementById('guestBtn').addEventListener('click', ()=>{
+            if(!confirm('Continue as guest? Data will be stored in a shared guest space.')) return;
+            localStorage.removeItem('docx_token');
+            localStorage.setItem('docx_current_user', 'guest');
+            window.location.href = 'docx.html';
+        });
+
+        // Server helper controls
+        async function checkServer() {
+            const status = document.getElementById('serverStatus');
+            try {
+                const res = await fetch('http://localhost:3000/api/health');
+                if (!res.ok) throw new Error('no');
+                const j = await res.json();
+                status.textContent = 'Server: online';
+                status.style.color = '#9ff1d9';
+                return true;
+            } catch (err) {
+                status.textContent = 'Server: offline';
+                status.style.color = '#fca5a5';
+                return false;
+            }
+        }
+
+        document.getElementById('checkServerBtn').addEventListener('click', async ()=>{
+            await checkServer();
+            const pre = document.getElementById('serverCmds');
+            if (pre) pre.style.display = 'block';
+        });
+
+        document.getElementById('copyCmdsBtn').addEventListener('click', ()=>{
+            const cmds = 'npm install\n npm start';
+            navigator.clipboard.writeText(cmds).then(()=>{
+                alert('Copied start commands to clipboard');
+            }).catch(()=>{
+                alert('Unable to copy - please select and copy manually');
+            });
+            const pre = document.getElementById('serverCmds'); if (pre) pre.style.display = 'block';
+        });
+
+        document.getElementById('openServerBtn').addEventListener('click', ()=>{
+            window.open('http://localhost:3000', '_blank');
+        });
+
+        // auto-check server status on page load
+        setTimeout(()=>{ checkServer(); }, 500);
+    </script>
+</body>
+</html>

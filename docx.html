@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocX - Interactive Note Network</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #0f1720;
+            --card: #0b1220;
+            --accent: #06b6d4;
+            --accent-dark: #0369a1;
+            --text: #dbeafe;
+            --text-dim: rgba(219, 234, 254, 0.6);
+            --border: rgba(255, 255, 255, 0.03);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(6, 182, 212, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(6, 182, 212, 0.12) 0%, transparent 50%);
+            animation: glowShift 8s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes glowShift {
+            0%, 100% {
+                opacity: 0.8;
+            }
+            50% {
+                opacity: 1.2;
+            }
+        }
+
+        header, .container, footer {
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: var(--accent);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            color: white;
+        }
+
+        .header-title h1 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .header-title p {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-top: 2px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            gap: 0;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .notes-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .note-item {
+            padding: 10px;
+            margin: 4px 0;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .note-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: var(--border);
+        }
+
+        .note-item.active {
+            background: rgba(6, 182, 212, 0.1);
+            border-color: var(--accent);
+        }
+
+        .note-item-text {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .note-item-del {
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 12px;
+            padding: 2px 6px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .note-item:hover .note-item-del {
+            opacity: 1;
+        }
+
+        .note-item-del:hover {
+            color: #ef4444;
+        }
+
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            background: 
+                radial-gradient(circle at 30% 30%, rgba(6, 182, 212, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 70% 70%, rgba(6, 182, 212, 0.06) 0%, transparent 40%),
+                #000;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .panel {
+            position: absolute;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+            max-width: 320px;
+            z-index: 100;
+            cursor: grab;
+            user-select: none;
+            resize: both;
+            overflow: auto;
+            min-width: 250px;
+            min-height: 300px;
+        }
+
+        .panel.dragging {
+            cursor: grabbing;
+            box-shadow: 0 25px 50px -12px rgba(6, 182, 212, 0.3);
+        }
+
+        .resize-handle {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            bottom: 0;
+            right: 0;
+            cursor: nwse-resize;
+            background: linear-gradient(135deg, transparent 50%, var(--accent) 50%);
+            border-radius: 0 0 8px 0;
+        }
+
+        .resize-handle:hover {
+            background: linear-gradient(135deg, transparent 50%, #0369a1 50%);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .panel-header:active {
+            cursor: grabbing;
+        }
+
+        .panel-header h3 {
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            color: var(--text);
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+            max-height: 200px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .form-actions button {
+            flex: 1;
+        }
+
+        .connections-list {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .connection-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 8px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 4px;
+            margin-bottom: 4px;
+            font-size: 12px;
+        }
+
+        .connection-remove {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .connection-remove:hover {
+            color: #ef4444;
+        }
+
+        .select-connection {
+            font-size: 12px;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 4px 8px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .select-connection:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .mode-indicator {
+            font-size: 12px;
+            color: var(--text-dim);
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+
+        .node {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 50;
+            white-space: nowrap;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        .empty-state {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: var(--text-dim);
+            z-index: 10;
+        }
+
+        .empty-state h2 {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .empty-state p {
+            font-size: 13px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: 200px;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .panel {
+                max-width: 90vw;
+                max-height: 80vh;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <div class="logo">📚</div>
+            <div class="header-title">
+                <h1>DocX</h1>
+                <p>Interactive Note Network & Knowledge Graph</p>
+            </div>
+        </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary" id="clearBtn" title="Clear all notes">Clear All</button>
+                <button class="btn btn-primary" id="newNoteBtn">+ New Note</button>
+                <div style="display: flex; gap:8px; align-items: center; margin-left: 12px;">
+                    <input type="text" id="docNameInput" placeholder="Document name" style="padding:8px; border-radius:6px; border:1px solid var(--border); background: rgba(255,255,255,0.02); color:var(--text);">
+                    <select id="docListSelect" style="padding:8px; border-radius:6px; border:1px solid var(--border); background: rgba(255,255,255,0.02); color:var(--text);"></select>
+                    <button class="btn btn-secondary" id="saveDocBtn">Save Doc</button>
+                    <button class="btn btn-secondary" id="loadDocBtn">Load</button>
+                    <button class="btn btn-secondary" id="newDocBtn">New Doc</button>
+                    <button class="btn btn-secondary" id="deleteDocBtn">Delete</button>
+                    <button class="btn btn-secondary" id="exportBtn">Export</button>
+                    <button class="btn btn-secondary" id="importBtn">Import</button>
+                    <input type="file" id="importFileInput" accept="application/json" style="display:none">
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;margin-left:12px">
+                    <span id="userBadge" style="font-size:13px;color:var(--text-dim)"></span>
+                    <button class="btn btn-secondary" id="logoutBtn">Logout</button>
+                </div>
+            </div>
+    </header>
+
+    <div class="container">
+        <div class="sidebar">
+            <div class="sidebar-header">Notes</div>
+            <div class="notes-list" id="notesList"></div>
+        </div>
+        <div class="canvas-container">
+            <canvas id="canvas"></canvas>
+            <div class="empty-state" id="emptyState">
+                <h2>No Notes Yet</h2>
+                <p>Click "New Note" to get started or create your first note</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Panel -->
+    <div id="editPanel" class="panel" style="display: none;">
+        <div class="panel-header">
+            <h3>Edit Note</h3>
+            <button class="close-btn" onclick="closeEditPanel()">&times;</button>
+        </div>
+        <div class="form-group">
+            <label>Title</label>
+            <input type="text" id="noteTitle" placeholder="Enter note title...">
+        </div>
+        <div class="form-group">
+            <label>Content</label>
+            <textarea id="noteContent" placeholder="Enter your notes..."></textarea>
+        </div>
+        <div class="form-group">
+            <label>Color</label>
+            <div style="display: flex; gap: 8px;">
+                <input type="color" id="noteColor" value="#06b6d4" style="width: 50px; height: 32px; border: 1px solid var(--border); border-radius: 4px; cursor: pointer;">
+            </div>
+        </div>
+        <div class="connections-list" id="connectionsList"></div>
+        <div class="form-actions">
+            <button class="btn btn-secondary" onclick="addConnectionMode()">+ Connect</button>
+            <button class="btn btn-primary" onclick="saveNote()">Save</button>
+        </div>
+        <div class="mode-indicator" id="modeIndicator"></div>
+        <div class="resize-handle"></div>
+    </div>
+
+    <script>
+        // Authentication & State
+        const token = localStorage.getItem('docx_token');
+        const currentUser = localStorage.getItem('docx_current_user');
+        if (!token && (!currentUser || currentUser === 'guest')) {
+            window.location.href = 'login.html';
+        }
+
+        // Frontend token claim checks (loose check of issuer/audience)
+        const FRONT_AUTH0_DOMAIN = 'dev-t8ky1sq7itz4af5f.us.auth0.com';
+        const FRONT_AUTH0_AUDIENCE = '';
+
+        function decodeJwt(token) {
+            try {
+                const parts = token.split('.');
+                if (parts.length !== 3) return null;
+                return JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+            } catch (e) { return null; }
+        }
+
+        function validateTokenClaims() {
+            const t = localStorage.getItem('docx_token');
+            if (!t) return false;
+            const claims = decodeJwt(t);
+            if (!claims) return false;
+            if (FRONT_AUTH0_DOMAIN) {
+                const expectedIss = 'https://' + FRONT_AUTH0_DOMAIN + '/';
+                if (claims.iss && claims.iss !== expectedIss) return false;
+            }
+            if (FRONT_AUTH0_AUDIENCE) {
+                const aud = claims.aud;
+                if (Array.isArray(aud)) {
+                    if (!aud.includes(FRONT_AUTH0_AUDIENCE)) return false;
+                } else {
+                    if (aud !== FRONT_AUTH0_AUDIENCE) return false;
+                }
+            }
+            return true;
+        }
+
+        // If token present but doesn't match expected issuer/audience, force re-login
+        if (token && !validateTokenClaims()) {
+            if (confirm('Authentication token looks invalid for this Auth0 tenant. Re-login now?')) {
+                window.location.href = 'login.html';
+            }
+        }
+
+        function apiHeaders() {
+            const h = { 'Content-Type': 'application/json' };
+            const t = localStorage.getItem('docx_token');
+            if (t) h['Authorization'] = 'Bearer ' + t;
+            return h;
+        }
+
+        function userKey(suffix) {
+            return `docx_${currentUser || 'guest'}_${suffix}`;
+        }
+
+        // show user badge when header is present
+        setTimeout(()=>{
+            const b = document.getElementById('userBadge');
+            if (b) b.textContent = currentUser ? ('User: ' + currentUser) : '';
+        }, 10);
+
+        function logout() {
+            localStorage.removeItem('docx_current_user');
+            localStorage.removeItem('docx_token');
+            window.location.href = 'login.html';
+        }
+
+        // State
+        let notes = [];
+        let connections = [];
+        let selectedNote = null;
+        let connecting = false;
+        let hoveredNode = null;
+        let canvas, ctx;
+        let panX = 0, panY = 0, scale = 1;
+        let isDragging = false;
+        let dragStart = { x: 0, y: 0 };
+        let draggedNode = null;
+        let resizingPanel = false;
+        let resizingNote = null;
+
+        const NODE_RADIUS = 30;
+        const NODE_SPRING = 0.1;
+        const NODE_REPULSION = 5000;
+        const DAMPING = 0.95;
+
+        // Initialize
+        function init() {
+            canvas = document.getElementById('canvas');
+            ctx = canvas.getContext('2d');
+            loadData();
+            resizeCanvas();
+            setupEventListeners();
+            animate();
+            updateUI();
+        }
+
+        function setupEventListeners() {
+            window.addEventListener('resize', resizeCanvas);
+            canvas.addEventListener('mousedown', handleCanvasMouseDown);
+            canvas.addEventListener('mousemove', handleCanvasMouseMove);
+            canvas.addEventListener('mouseup', handleCanvasMouseUp);
+            canvas.addEventListener('wheel', handleCanvasWheel);
+            canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+            document.getElementById('newNoteBtn').addEventListener('click', createNewNote);
+            document.getElementById('clearBtn').addEventListener('click', clearAll);
+
+            // Panel drag listeners
+            const panel = document.getElementById('editPanel');
+            const header = panel.querySelector('.panel-header');
+            let panelDragging = false;
+            let panelDragStart = { x: 0, y: 0 };
+
+            header.addEventListener('mousedown', (e) => {
+                panelDragging = true;
+                panelDragStart = { x: e.clientX - panel.offsetLeft, y: e.clientY - panel.offsetTop };
+                panel.classList.add('dragging');
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (panelDragging) {
+                    panel.style.left = (e.clientX - panelDragStart.x) + 'px';
+                    panel.style.top = (e.clientY - panelDragStart.y) + 'px';
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                panelDragging = false;
+                panel.classList.remove('dragging');
+            });
+
+            // Panel resize listener
+            const resizeHandle = panel.querySelector('.resize-handle');
+            let panelResizing = false;
+
+            resizeHandle.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                panelResizing = true;
+                panelDragStart = { x: e.clientX, y: e.clientY, width: panel.offsetWidth, height: panel.offsetHeight };
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (panelResizing) {
+                    const dx = e.clientX - panelDragStart.x;
+                    const dy = e.clientY - panelDragStart.y;
+                    panel.style.width = Math.max(250, panelDragStart.width + dx) + 'px';
+                    panel.style.height = Math.max(300, panelDragStart.height + dy) + 'px';
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                panelResizing = false;
+            });
+        }
+
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+
+        // Notes Management
+        function createNewNote() {
+            const note = {
+                id: Date.now(),
+                title: 'New Note',
+                content: '',
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                vx: 0,
+                vy: 0,
+                color: '#06b6d4',
+                width: NODE_RADIUS * 2.5,
+                height: NODE_RADIUS * 1.5
+            };
+            notes.push(note);
+            selectedNote = note.id;
+            saveData();
+            updateUI();
+            openEditPanel();
+        }
+
+        function deleteNote(noteId) {
+            notes = notes.filter(n => n.id !== noteId);
+            connections = connections.filter(c => c.from !== noteId && c.to !== noteId);
+            if (selectedNote === noteId) selectedNote = null;
+            saveData();
+            updateUI();
+        }
+
+        function getNote(id) {
+            return notes.find(n => n.id === id);
+        }
+
+        function findNodeAt(x, y) {
+            const clickX = (x - panX) / scale;
+            const clickY = (y - panY) / scale;
+            for (let note of notes) {
+                const width = note.width || NODE_RADIUS * 2.5;
+                const height = note.height || NODE_RADIUS * 1.5;
+                if (clickX >= note.x - width && clickX <= note.x + width &&
+                    clickY >= note.y - height && clickY <= note.y + height) {
+                    return note;
+                }
+            }
+            return null;
+        }
+
+        function getResizeHandleAt(x, y) {
+            if (!selectedNote) return null;
+            const note = getNote(selectedNote);
+            if (!note) return null;
+
+            const clickX = (x - panX) / scale;
+            const clickY = (y - panY) / scale;
+            const width = note.width || NODE_RADIUS * 2.5;
+            const height = note.height || NODE_RADIUS * 1.5;
+            const handleSize = 15;
+
+            // Triangle resize handle - check if click is in the bottom-right corner area
+            if (clickX >= note.x + width - handleSize && clickX <= note.x + width &&
+                clickY >= note.y + height - handleSize && clickY <= note.y + height) {
+                return 'br';
+            }
+            return null;
+        }
+
+        // Canvas Events
+        function handleCanvasMouseDown(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            if (connecting) {
+                const node = findNodeAt(x, y);
+                if (node && node.id !== selectedNote) {
+                    connections.push({ from: selectedNote, to: node.id });
+                    connecting = false;
+                    updateConnectionsList();
+                    saveData();
+                }
+                connecting = false;
+                document.getElementById('modeIndicator').textContent = '';
+                return;
+            }
+
+            // Check for note resize handle
+            const resizeHandle = getResizeHandleAt(x, y);
+            if (resizeHandle) {
+                resizingNote = getNote(selectedNote);
+                dragStart = { x, y };
+                return;
+            }
+
+            draggedNode = findNodeAt(x, y);
+            if (draggedNode) {
+                isDragging = true;
+                dragStart = { x, y };
+            } else {
+                isDragging = true;
+                dragStart = { x, y };
+            }
+        }
+
+        function handleCanvasMouseMove(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const node = findNodeAt(x, y);
+            hoveredNode = node;
+
+            // Update cursor for resize handle
+            if (getResizeHandleAt(x, y)) {
+                canvas.style.cursor = 'nwse-resize';
+            } else {
+                canvas.style.cursor = 'default';
+            }
+
+            // Handle note resizing
+            if (resizingNote) {
+                const dx = (e.clientX - rect.left - dragStart.x) / scale;
+                const dy = (e.clientY - rect.top - dragStart.y) / scale;
+                const currentWidth = resizingNote.width || NODE_RADIUS * 2.5;
+                const currentHeight = resizingNote.height || NODE_RADIUS * 1.5;
+                resizingNote.width = Math.max(20, currentWidth + dx);
+                resizingNote.height = Math.max(15, currentHeight + dy);
+                dragStart = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+                return;
+            }
+
+            if (isDragging) {
+                if (draggedNode) {
+                    const dx = (e.clientX - rect.left - dragStart.x) / scale;
+                    const dy = (e.clientY - rect.top - dragStart.y) / scale;
+                    draggedNode.x += dx;
+                    draggedNode.y += dy;
+                    dragStart = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+                } else {
+                    panX += e.clientX - rect.left - dragStart.x;
+                    panY += e.clientY - rect.top - dragStart.y;
+                    dragStart = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+                }
+            }
+        }
+
+        function handleCanvasMouseUp(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            if (resizingNote) {
+                saveData();
+                resizingNote = null;
+                return;
+            }
+
+            if (isDragging && !draggedNode && Math.hypot(x - dragStart.x, y - dragStart.y) < 5) {
+                const node = findNodeAt(x, y);
+                if (node) {
+                    selectedNote = node.id;
+                    openEditPanel();
+                }
+            }
+
+            isDragging = false;
+            draggedNode = null;
+            saveData();
+        }
+
+        function handleCanvasWheel(e) {
+            e.preventDefault();
+            const zoomFactor = 0.9;
+            const newScale = e.deltaY < 0 ? scale * (1 / zoomFactor) : scale * zoomFactor;
+            scale = Math.max(0.1, Math.min(3, newScale));
+        }
+
+        // Physics Simulation
+        function updatePhysics() {
+            for (let note of notes) {
+                let fx = 0, fy = 0;
+
+                // Spring forces from connections
+                for (let conn of connections) {
+                    if (conn.from === note.id) {
+                        const target = getNote(conn.to);
+                        if (target) {
+                            const dx = target.x - note.x;
+                            const dy = target.y - note.y;
+                            const dist = Math.hypot(dx, dy) || 1;
+                            fx += (dx / dist) * NODE_SPRING;
+                            fy += (dy / dist) * NODE_SPRING;
+                        }
+                    }
+                    if (conn.to === note.id) {
+                        const target = getNote(conn.from);
+                        if (target) {
+                            const dx = target.x - note.x;
+                            const dy = target.y - note.y;
+                            const dist = Math.hypot(dx, dy) || 1;
+                            fx += (dx / dist) * NODE_SPRING;
+                            fy += (dy / dist) * NODE_SPRING;
+                        }
+                    }
+                }
+
+                // Repulsion from other nodes
+                for (let other of notes) {
+                    if (other.id !== note.id) {
+                        const dx = note.x - other.x;
+                        const dy = note.y - other.y;
+                        const dist = Math.hypot(dx, dy) || 1;
+                        if (dist < 300) {
+                            fx += (dx / dist) * (NODE_REPULSION / (dist * dist));
+                            fy += (dy / dist) * (NODE_REPULSION / (dist * dist));
+                        }
+                    }
+                }
+
+                note.vx = (note.vx + fx) * DAMPING;
+                note.vy = (note.vy + fy) * DAMPING;
+                note.x += note.vx;
+                note.y += note.vy;
+            }
+        }
+
+        // Rendering
+        function draw() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.save();
+            ctx.translate(panX, panY);
+            ctx.scale(scale, scale);
+
+            // Draw connections (stop at rectangle edges, with black outline)
+            for (let conn of connections) {
+                const from = getNote(conn.from);
+                const to = getNote(conn.to);
+                if (from && to) {
+                    const fromW = (from.width || NODE_RADIUS * 2.5) / 2; // half-width
+                    const fromH = (from.height || NODE_RADIUS * 1.5) / 2; // half-height
+                    const toW = (to.width || NODE_RADIUS * 2.5) / 2;
+                    const toH = (to.height || NODE_RADIUS * 1.5) / 2;
+
+                    const dx = to.x - from.x;
+                    const dy = to.y - from.y;
+                    const dist = Math.hypot(dx, dy) || 1;
+                    const ux = dx / dist;
+                    const uy = dy / dist;
+
+                    // compute intersection t with rectangle edge for 'from' node
+                    const tx = ux !== 0 ? fromW / Math.abs(ux) : Infinity;
+                    const ty = uy !== 0 ? fromH / Math.abs(uy) : Infinity;
+                    const tFrom = Math.min(tx, ty);
+
+                    // compute intersection t with rectangle edge for 'to' node (direction reversed)
+                    const tx2 = ux !== 0 ? toW / Math.abs(ux) : Infinity;
+                    const ty2 = uy !== 0 ? toH / Math.abs(uy) : Infinity;
+                    const tTo = Math.min(tx2, ty2);
+
+                    // exact edge points
+                    const startX = from.x + ux * tFrom;
+                    const startY = from.y + uy * tFrom;
+                    const endX = to.x - ux * tTo;
+                    const endY = to.y - uy * tTo;
+
+                    // draw black outline first (wider)
+                    ctx.beginPath();
+                    ctx.moveTo(startX, startY);
+                    ctx.lineTo(endX, endY);
+                    ctx.lineWidth = 6 / scale;
+                    ctx.strokeStyle = 'rgba(0,0,0,1)';
+                    ctx.stroke();
+
+                    // draw colored inner line
+                    ctx.beginPath();
+                    ctx.moveTo(startX, startY);
+                    ctx.lineTo(endX, endY);
+                    ctx.lineWidth = 2 / scale;
+                    ctx.strokeStyle = 'rgba(6, 182, 212, 0.9)';
+                    ctx.stroke();
+                }
+            }
+
+            // Draw nodes as rectangles
+            for (let note of notes) {
+                const isSelected = note.id === selectedNote;
+                const isHovered = note.id === hoveredNode?.id;
+                const width = note.width || NODE_RADIUS * 2.5;
+                const height = note.height || NODE_RADIUS * 1.5;
+
+                // Draw glow blue background
+                ctx.shadowColor = 'rgba(6, 182, 212, 0.5)';
+                ctx.shadowBlur = 25 / scale;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+
+                // Draw background rectangle with glow blue
+                ctx.fillStyle = 'rgba(6, 182, 212, 0.15)';
+                ctx.fillRect(note.x - width, note.y - height, width * 2, height * 2);
+
+                // Draw colored border/accent
+                ctx.shadowColor = note.color + '66';
+                ctx.shadowBlur = 15 / scale;
+                ctx.fillStyle = note.color + (isSelected ? '22' : isHovered ? '18' : '0a');
+                ctx.fillRect(note.x - width + 2 / scale, note.y - height + 2 / scale, width * 2 - 4 / scale, height * 2 - 4 / scale);
+
+                // Draw border for selected
+                if (isSelected) {
+                    ctx.shadowColor = 'transparent';
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 3 / scale;
+                    ctx.strokeRect(note.x - width - 5, note.y - height - 5, width * 2 + 10, height * 2 + 10);
+                }
+
+                // Draw title and content inside the rectangle
+                ctx.shadowColor = 'transparent';
+                ctx.fillStyle = '#ffffff';
+                const titleFontSize = 12 / scale;
+                const contentFontSize = 11 / scale;
+                const padding = 8 / scale;
+                const left = note.x - width + padding;
+                const top = note.y - height + padding;
+                const contentWidth = width * 2 - padding * 2;
+
+                // Title
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'top';
+                ctx.font = `bold ${titleFontSize}px 'Segoe UI', sans-serif`;
+                const titleText = (note.title || 'Untitled');
+                ctx.fillText(titleText, left, top);
+
+                // Content (wrapped)
+                ctx.font = `${contentFontSize}px 'Segoe UI', sans-serif`;
+                const raw = (note.content || '').replace(/\n/g, ' ').trim();
+                const words = raw.split(/\s+/);
+                let line = '';
+                const lineHeight = Math.max(contentFontSize + 4 / scale, 14 / scale);
+                let y = top + titleFontSize + 6 / scale;
+                const maxContentHeight = height * 2 - (titleFontSize + padding * 2 + 6 / scale);
+                const maxLines = Math.max(1, Math.floor(maxContentHeight / lineHeight));
+                let drawnLines = 0;
+
+                for (let i = 0; i < words.length; i++) {
+                    const test = line ? (line + ' ' + words[i]) : words[i];
+                    const tw = ctx.measureText(test).width;
+                    if (tw > contentWidth && line) {
+                        // draw line
+                        if (drawnLines < maxLines) {
+                            ctx.fillText(line, left, y);
+                            drawnLines++;
+                            y += lineHeight;
+                        }
+                        line = words[i];
+                    } else {
+                        line = test;
+                    }
+                }
+                if (line && drawnLines < maxLines) {
+                    ctx.fillText(line, left, y);
+                    drawnLines++;
+                } else if (line && drawnLines >= maxLines) {
+                    // truncate last line with ellipsis
+                    let truncated = '';
+                    for (let ch of line) {
+                        const t = truncated + ch + '…';
+                        if (ctx.measureText(t).width > contentWidth) break;
+                        truncated += ch;
+                    }
+                    ctx.fillText(truncated + '…', left, y - lineHeight);
+                }
+
+                // Draw resize handle on selected note (triangle)
+                if (isSelected) {
+                    const handleSize = 12 / scale;
+                    ctx.fillStyle = '#06b6d4ff';
+                    ctx.beginPath();
+                    ctx.moveTo(note.x + width, note.y + height);
+                    ctx.lineTo(note.x + width - handleSize, note.y + height);
+                    ctx.lineTo(note.x + width, note.y + height - handleSize);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 1 / scale;
+                    ctx.stroke();
+                }
+            }
+
+            ctx.restore();
+
+            // Draw tooltip
+            if (hoveredNode && hoveredNode.id !== selectedNote) {
+                const width = hoveredNode.width || NODE_RADIUS * 2.5;
+                const height = hoveredNode.height || NODE_RADIUS * 1.5;
+                const screenX = (hoveredNode.x + width) * scale + panX;
+                const screenY = (hoveredNode.y - height) * scale + panY;
+                const tooltip = document.createElement('div');
+                tooltip.className = 'tooltip';
+                tooltip.textContent = hoveredNode.title;
+                tooltip.style.left = (screenX + 10) + 'px';
+                tooltip.style.top = (screenY - 10) + 'px';
+            }
+        }
+
+        function animate() {
+            updatePhysics();
+            draw();
+            requestAnimationFrame(animate);
+        }
+
+        // UI Management
+        function updateUI() {
+            const notesList = document.getElementById('notesList');
+            notesList.innerHTML = '';
+            
+            const emptyState = document.getElementById('emptyState');
+            emptyState.style.display = notes.length === 0 ? 'block' : 'none';
+
+            for (let note of notes) {
+                const item = document.createElement('div');
+                item.className = 'note-item' + (note.id === selectedNote ? ' active' : '');
+                item.innerHTML = `
+                    <span class="note-item-text">${escapeHtml(note.title)}</span>
+                    <span class="note-item-del" onclick="deleteNote(${note.id}); event.stopPropagation();">✕</span>
+                `;
+                item.addEventListener('click', () => {
+                    selectedNote = note.id;
+                    openEditPanel();
+                });
+                notesList.appendChild(item);
+            }
+        }
+
+        function openEditPanel() {
+            if (!selectedNote) return;
+            const note = getNote(selectedNote);
+            if (!note) return;
+
+            document.getElementById('noteTitle').value = note.title;
+            document.getElementById('noteContent').value = note.content;
+            document.getElementById('noteColor').value = note.color;
+            updateConnectionsList();
+            document.getElementById('editPanel').style.display = 'block';
+            updateUI();
+        }
+
+        function closeEditPanel() {
+            document.getElementById('editPanel').style.display = 'none';
+            connecting = false;
+            document.getElementById('modeIndicator').textContent = '';
+        }
+
+        function saveNote() {
+            if (!selectedNote) return;
+            const note = getNote(selectedNote);
+            if (note) {
+                note.title = document.getElementById('noteTitle').value || 'Untitled';
+                note.content = document.getElementById('noteContent').value;
+                note.color = document.getElementById('noteColor').value;
+                saveData();
+                updateUI();
+            }
+        }
+
+        function addConnectionMode() {
+            connecting = true;
+            document.getElementById('modeIndicator').textContent = '📍 Click another note to connect';
+        }
+
+        function updateConnectionsList() {
+            const list = document.getElementById('connectionsList');
+            list.innerHTML = '<strong style="font-size: 12px; color: var(--text-dim);">Connections</strong>';
+
+            for (let conn of connections) {
+                if (conn.from === selectedNote) {
+                    const target = getNote(conn.to);
+                    if (target) {
+                        const item = document.createElement('div');
+                        item.className = 'connection-item';
+                        item.innerHTML = `
+                            <span>→ ${escapeHtml(target.title)}</span>
+                            <button class="connection-remove" onclick="removeConnection(${conn.from}, ${conn.to})"">✕</button>
+                        `;
+                        list.appendChild(item);
+                    }
+                }
+                if (conn.to === selectedNote) {
+                    const target = getNote(conn.from);
+                    if (target) {
+                        const item = document.createElement('div');
+                        item.className = 'connection-item';
+                        item.innerHTML = `
+                            <span>← ${escapeHtml(target.title)}</span>
+                            <button class="connection-remove" onclick="removeConnection(${conn.from}, ${conn.to})">✕</button>
+                        `;
+                        list.appendChild(item);
+                    }
+                }
+            }
+        }
+
+        function removeConnection(from, to) {
+            connections = connections.filter(c => !(c.from === from && c.to === to));
+            updateConnectionsList();
+            saveData();
+        }
+
+        function clearAll() {
+            if (confirm('Are you sure? This will delete all notes and connections.')) {
+                notes = [];
+                connections = [];
+                selectedNote = null;
+                closeEditPanel();
+                saveData();
+                updateUI();
+            }
+        }
+
+        // Storage
+        function saveData() {
+            try {
+                localStorage.setItem(userKey('notes'), JSON.stringify(notes));
+                localStorage.setItem(userKey('connections'), JSON.stringify(connections));
+            } catch (e) {
+                console.error('saveData error', e);
+            }
+        }
+
+        function loadData() {
+            const notesData = localStorage.getItem(userKey('notes'));
+            const connectionsData = localStorage.getItem(userKey('connections'));
+            if (notesData) notes = JSON.parse(notesData);
+            if (connectionsData) connections = JSON.parse(connectionsData);
+        }
+
+        // Document-level storage (per-user named documents)
+
+        async function getSavedDocs() {
+            if (!token) return {};
+            const res = await fetch('http://localhost:3000/api/docs', { headers: apiHeaders() });
+            if (!res.ok) { console.error('failed to fetch docs'); return {}; }
+            const j = await res.json();
+            const out = {};
+            for (let d of j.docs || []) out[d.name] = { created: d.created };
+            return out;
+        }
+
+        async function refreshDocList() {
+            const select = document.getElementById('docListSelect');
+            if (!select) return;
+            const index = await getSavedDocs();
+            select.innerHTML = '';
+            const names = Object.keys(index).sort((a,b)=> (index[a].created||0) - (index[b].created||0));
+            for (let name of names) {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                select.appendChild(opt);
+            }
+        }
+
+        async function saveCurrentDoc() {
+            if (!token) { alert('Not authenticated to save to server'); return; }
+            const nameInput = document.getElementById('docNameInput');
+            let name = (nameInput && nameInput.value || '').trim();
+            if (!name) {
+                name = prompt('Enter a name for this document snapshot:');
+                if (!name) return;
+            }
+            const payload = { notes: notes, connections: connections, panX, panY, scale };
+            const res = await fetch('http://localhost:3000/api/docs', {
+                method: 'POST', headers: apiHeaders(), body: JSON.stringify({ name, payload })
+            });
+            const j = await res.json();
+            if (!res.ok) { alert('Save failed: ' + (j.error || res.status)); return; }
+            alert('Saved document: ' + name);
+            await refreshDocList();
+        }
+
+        async function loadSelectedDoc() {
+            if (!token) { alert('Not authenticated to load from server'); return; }
+            const select = document.getElementById('docListSelect');
+            const name = select && select.value;
+            if (!name) { alert('No document selected'); return; }
+            const res = await fetch('http://localhost:3000/api/docs/' + encodeURIComponent(name), { headers: apiHeaders() });
+            const j = await res.json();
+            if (!res.ok) { alert('Load failed: ' + (j.error || res.status)); return; }
+            const doc = j.payload || {};
+            notes = doc.notes || [];
+            connections = doc.connections || [];
+            panX = doc.panX || 0;
+            panY = doc.panY || 0;
+            scale = doc.scale || 1;
+            selectedNote = null;
+            closeEditPanel();
+            saveData();
+            updateUI();
+            alert('Loaded document: ' + name);
+        }
+
+        async function deleteSelectedDoc() {
+            if (!token) { alert('Not authenticated'); return; }
+            const select = document.getElementById('docListSelect');
+            const name = select && select.value;
+            if (!name) { alert('No document selected'); return; }
+            if (!confirm('Delete saved document "' + name + '"?')) return;
+            const res = await fetch('http://localhost:3000/api/docs/' + encodeURIComponent(name), { method: 'DELETE', headers: apiHeaders() });
+            const j = await res.json();
+            if (!res.ok) { alert('Delete failed: ' + (j.error || res.status)); return; }
+            await refreshDocList();
+        }
+
+        function newDocument() {
+            if (!confirm('Create new document? Unsaved changes will be lost.')) return;
+            notes = [];
+            connections = [];
+            panX = 0; panY = 0; scale = 1; selectedNote = null;
+            saveData();
+            updateUI();
+        }
+
+        // Export current user's data (notes, connections, saved docs)
+        function exportUserData() {
+            try {
+                const payload = {
+                    meta: { user: currentUser || 'guest', exported: Date.now() },
+                    notes: notes || [],
+                    connections: connections || [],
+                    savedDocs: getSavedDocs()
+                };
+                const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${(currentUser||'user')}_docx_backup_${Date.now()}.json`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                alert('Export failed: ' + e.message);
+            }
+        }
+
+        // Handle import file selection
+        async function handleImportFileInput(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const obj = JSON.parse(reader.result);
+                    if (!confirm('Importing will replace current notes and saved docs for user "' + (currentUser||'guest') + '". Continue?')) return;
+                    if (obj.notes) notes = obj.notes;
+                    if (obj.connections) connections = obj.connections;
+                    if (obj.savedDocs) {
+                        // upload saved docs to server if token present
+                        if (token) {
+                            const docs = obj.savedDocs;
+                            for (let n of Object.keys(docs)) {
+                                await fetch('http://localhost:3000/api/docs', { method: 'POST', headers: apiHeaders(), body: JSON.stringify({ name: n, payload: docs[n].payload || docs[n] }) });
+                            }
+                        } else {
+                            saveDocsIndex(obj.savedDocs);
+                        }
+                    }
+                    saveData();
+                    updateUI();
+                    await refreshDocList();
+                    alert('Import complete');
+                } catch (err) {
+                    alert('Failed to import JSON: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Wire up doc controls
+        const saveBtn = document.getElementById('saveDocBtn'); if (saveBtn) saveBtn.addEventListener('click', saveCurrentDoc);
+        const loadBtn = document.getElementById('loadDocBtn'); if (loadBtn) loadBtn.addEventListener('click', loadSelectedDoc);
+        const delBtn = document.getElementById('deleteDocBtn'); if (delBtn) delBtn.addEventListener('click', deleteSelectedDoc);
+        const docSelect = document.getElementById('docListSelect'); if (docSelect) docSelect.addEventListener('change', (e)=>{
+            const ni = document.getElementById('docNameInput'); if (ni) ni.value = e.target.value || '';
+        });
+        const newDocBtn = document.getElementById('newDocBtn'); if (newDocBtn) newDocBtn.addEventListener('click', newDocument);
+        const logoutBtn = document.getElementById('logoutBtn'); if (logoutBtn) logoutBtn.addEventListener('click', logout);
+        const exportBtn = document.getElementById('exportBtn'); if (exportBtn) exportBtn.addEventListener('click', exportUserData);
+        const importBtn = document.getElementById('importBtn'); if (importBtn) importBtn.addEventListener('click', ()=>document.getElementById('importFileInput').click());
+        const importFileInput = document.getElementById('importFileInput'); if (importFileInput) importFileInput.addEventListener('change', handleImportFileInput);
+
+        // Start
+        init();
+        // refresh list after init
+        refreshDocList();
+    </script>
+</body>
+</html>
