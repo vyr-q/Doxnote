@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DocX - Interactive Note Network</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -183,7 +183,10 @@ input[type=file] { display: none; }
 
 /* Connections in editor */
 .conn-section { flex-shrink: 0; padding: 10px 16px 14px; border-top: 1px solid rgba(255,255,255,0.05); }
-.conn-section-label { font-size: 10px; color: #334155; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 7px; }
+.conn-header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
+.conn-section-label { font-size: 10px; color: #334155; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+.conn-disconnect-all { font-size: 10px; color: #ef4444; background: transparent; border: none; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 500; opacity: 0.7; transition: opacity 0.12s; }
+.conn-disconnect-all:hover { opacity: 1; text-decoration: underline; }
 .conn-list { display: flex; flex-direction: column; gap: 3px; }
 .conn-item {
   display: flex; align-items: center; justify-content: space-between;
@@ -251,10 +254,8 @@ canvas { display: block; width: 100%; height: 100%; }
 
 <div class="main">
 
-  <!-- Left panel -->
   <div class="left-panel">
 
-    <!-- Note list -->
     <div class="list-section">
       <div class="list-header">
         <span class="list-label">Notes</span>
@@ -267,7 +268,6 @@ canvas { display: block; width: 100%; height: 100%; }
 
     <div class="panel-divider"></div>
 
-    <!-- Editor -->
     <div class="editor-section" id="editorSection">
       <div class="editor-empty" id="editorEmpty">
         <div class="editor-empty-icon">✏️</div>
@@ -289,7 +289,10 @@ canvas { display: block; width: 100%; height: 100%; }
           <textarea class="content-input" id="noteContent" placeholder="Start writing your note…" oninput="liveUpdate()"></textarea>
         </div>
         <div class="conn-section" id="connSection" style="display:none">
-          <div class="conn-section-label">Connections</div>
+          <div class="conn-header-row">
+            <div class="conn-section-label">Connections</div>
+            <button class="conn-disconnect-all" onclick="disconnectAll()">Disconnect all</button>
+          </div>
           <div class="conn-list" id="connectionsList"></div>
         </div>
         <div class="save-row">
@@ -301,7 +304,6 @@ canvas { display: block; width: 100%; height: 100%; }
 
   </div>
 
-  <!-- Canvas -->
   <div class="canvas-wrap">
     <canvas id="canvas"></canvas>
     <div class="mode-pill" id="modePill">Click another note to connect</div>
@@ -616,6 +618,17 @@ function updateConns() {
 function removeConn(f, t) {
   conns = conns.filter(c=>!(c.f===f&&c.t===t));
   updateConns(); saveData();
+}
+
+function disconnectAll() {
+  if (!sel) return;
+  const countBefore = conns.length;
+  conns = conns.filter(c => c.f !== sel && c.t !== sel);
+  const detachedCount = countBefore - conns.length;
+  
+  updateConns(); 
+  saveData();
+  showToast(`Disconnected ${detachedCount} link(s)`);
 }
 
 function clearAll() {
