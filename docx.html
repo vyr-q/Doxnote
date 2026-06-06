@@ -1362,63 +1362,73 @@
             }
         }
 
-        // Handle import file selection
+
+        // Handle import file selection - IMPROVED
         async function handleImportFileInput(e) {
             const file = e.target.files && e.target.files[0];
             if (!file) return;
+
             const reader = new FileReader();
-            reader.onload = () => {
+            reader.onload = async () => {
                 try {
                     const obj = JSON.parse(reader.result);
-                    if (!confirm('Importing will replace current notes and saved docs for user "' + (currentUser||'guest') + '". Continue?')) return;
-                    if (obj.notes) notes = obj.notes;
-                    if (obj.connections) connections = obj.connections;
-                    if (obj.savedDocs) {
-                        // upload saved docs to server if token present
-                        if (token) {
-                            const docs = obj.savedDocs;
-                            for (let n of Object.keys(docs)) {
-                                await fetch('http://localhost:3000/api/docs', { method: 'POST', headers: apiHeaders(), body: JSON.stringify({ name: n, payload: docs[n].payload || docs[n] }) });
-                            }
-                        } else {
-                            saveDocsIndex(obj.savedDocs);
-                        }
+
+                    if (!confirm('Importing this file will REPLACE your current notes and connections.\n\nContinue?')) {
+                        return;
                     }
+
+                    let importedNotes = [];
+                    let importedConnections = [];
+                    let importedPanX = 0;
+                    let importedPanY = 0;
+                    let importedScale = 1;
+
+                    // Support multiple export formats
+                    if (obj.notes && Array.isArray(obj.notes)) {
+                        importedNotes = obj.notes;
+                    } else if (obj.payload && obj.payload.notes) {
+                        importedNotes = obj.payload.notes;
+                    }
+
+                    if (obj.connections && Array.isArray(obj.connections)) {
+                        importedConnections = obj.connections;
+                    } else if (obj.payload && obj.payload.connections) {
+                        importedConnections = obj.payload.connections;
+                    }
+
+                    if (obj.payload) {
+                        importedPanX = obj.payload.panX || 0;
+                        importedPanY = obj.payload.panY || 0;
+                        importedScale = obj.payload.scale || 1;
+                    }
+
+                    // Apply the imported data
+                    notes = importedNotes;
+                    connections = importedConnections;
+                    panX = importedPanX;
+                    panY = importedPanY;
+                    scale = importedScale;
+                    selectedNote = null;
+
                     saveData();
                     updateUI();
-                    await refreshDocList();
-                    alert('Import complete');
+                    closeEditPanel();
+
+                    // Try to refresh document list if backend is available
+                    try {
+                        await refreshDocList();
+                    } catch (err) {
+                        console.warn("Could not refresh document list");
+                    }
+
+                    alert(`✅ Successfully imported ${notes.length} notes and ${connections.length} connections!`);
+                    
                 } catch (err) {
-                    alert('Failed to import JSON: ' + err.message);
+                    console.error(err);
+                    alert('❌ Failed to import file. Make sure it is a valid DocX backup JSON file.\n\nError: ' + err.message);
                 }
             };
+
             reader.readAsText(file);
-            e.target.value = '';
+            e.target.value = ''; // Reset input
         }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Wire up doc controls
-        const saveBtn = document.getElementById('saveDocBtn'); if (saveBtn) saveBtn.addEventListener('click', saveCurrentDoc);
-        const loadBtn = document.getElementById('loadDocBtn'); if (loadBtn) loadBtn.addEventListener('click', loadSelectedDoc);
-        const delBtn = document.getElementById('deleteDocBtn'); if (delBtn) delBtn.addEventListener('click', deleteSelectedDoc);
-        const docSelect = document.getElementById('docListSelect'); if (docSelect) docSelect.addEventListener('change', (e)=>{
-            const ni = document.getElementById('docNameInput'); if (ni) ni.value = e.target.value || '';
-        });
-        const newDocBtn = document.getElementById('newDocBtn'); if (newDocBtn) newDocBtn.addEventListener('click', newDocument);
-        const logoutBtn = document.getElementById('logoutBtn'); if (logoutBtn) logoutBtn.addEventListener('click', logout);
-        const exportBtn = document.getElementById('exportBtn'); if (exportBtn) exportBtn.addEventListener('click', exportUserData);
-        const importBtn = document.getElementById('importBtn'); if (importBtn) importBtn.addEventListener('click', ()=>document.getElementById('importFileInput').click());
-        const importFileInput = document.getElementById('importFileInput'); if (importFileInput) importFileInput.addEventListener('change', handleImportFileInput);
-
-        // Start
-        init();
-        // refresh list after init
-        refreshDocList();
-    </script>
-</body>
-</html>
