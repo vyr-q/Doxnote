@@ -2,188 +2,96 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>DocX Wheel Zoom</title>
+<title>DocX v2.0</title>
 <style>
-body{margin:0;background:#0a0a12;color:white;font-family:Arial;overflow:hidden}
-.header{height:50px;display:flex;align-items:center;gap:8px;padding:0 10px;background:#111}
-button{padding:8px 12px;border-radius:8px;border:1px solid #333;background:#1a1a24;color:white;cursor:pointer}
-#viewport{position:relative;width:100vw;height:calc(100vh - 50px);overflow:hidden;touch-action:none}
-#workspace{position:absolute;left:0;top:0;transform-origin:0 0}
-#lines{position:absolute;left:0;top:0;pointer-events:none}
-.note{position:absolute;width:260px;min-height:140px;padding:15px;border-radius:14px;color:white;border:1px solid rgba(255,255,255,.1);cursor:move}
+body{margin:0;font-family:Arial;background:#0a0a12;color:#fff;height:100vh;overflow:hidden}
+.header{height:50px;background:#111;display:flex;align-items:center;padding:0 12px;gap:10px}
+.btn{padding:8px 12px;border:1px solid #333;background:#1a1a24;color:white;border-radius:8px;cursor:pointer}
+.main{height:calc(100vh - 50px)}
+.page{display:none;height:100%}
+.page.active{display:flex}
+#canvasPage{position:relative}
+#frameworkPage{display:flex}
+#tree{width:40%;overflow:auto;padding:15px}
+#props{width:320px;border-left:1px solid #333;padding:15px;background:#111118}
+.node{padding:6px;margin-left:20px;cursor:pointer}
+.note{position:absolute;width:240px;min-height:120px;padding:12px;border-radius:12px;background:#123;box-shadow:0 0 20px cyan}
 </style>
 </head>
 <body>
 <div class="header">
-<button onclick="createNote()">+ Note</button>
-<button onclick="startConnect()">Connect</button>
-<button onclick="startDisconnect()">Disconnect</button>
-<button onclick="exportData()">Export</button>
-<button onclick="document.getElementById('importFile').click()">Import</button>
-<input id="importFile" type="file" accept=".json" style="display:none" onchange="importData(event)">
+<b>DocX v2.0</b>
+<button class="btn" onclick="showPage('canvasPage')">Canvas</button>
+<button class="btn" onclick="showPage('frameworkPage')">Framework Builder</button>
+<button class="btn" onclick="addNote()">+ Note</button>
+<button class="btn" onclick="addRoot()">+ Category</button>
 </div>
 
-<div id="viewport">
-<div id="workspace">
-<canvas id="lines" width="5000" height="5000"></canvas>
+<div class="main">
+<div id="canvasPage" class="page active">
+<canvas id="lines" style="position:absolute;inset:0"></canvas>
+</div>
+
+<div id="frameworkPage" class="page">
+<div id="tree"></div>
+<div id="props">
+<h3>Properties</h3>
+<input id="title" placeholder="Title" style="width:100%"><br><br>
+<input id="color" type="color" style="width:100%">
+</div>
 </div>
 </div>
 
 <script>
-let notes=[],connections=[];
-let zoom=1,panX=0,panY=0;
-let connectMode=false,disconnectMode=false,firstNode=null;
+let notes=[];
+let framework=[{id:1,title:"Gaming",children:[{id:2,title:"Minecraft",children:[]}]}];
 
-const viewport=document.getElementById('viewport');
-const workspace=document.getElementById('workspace');
-const canvas=document.getElementById('lines');
-const ctx=canvas.getContext('2d');
-
-function createNote(){
-const note={id:Date.now()+Math.random(),x:200,y:200,title:'New Note',color:'#06b6d4'};
-notes.push(note);render();save();
+function showPage(id){
+document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+document.getElementById(id).classList.add('active');
 }
 
-function render(){
-document.querySelectorAll('.note').forEach(n=>n.remove());
-notes.forEach(note=>{
+function addNote(){
 const d=document.createElement('div');
 d.className='note';
-d.style.left=note.x+'px';
-d.style.top=note.y+'px';
-d.style.background=note.color+'22';
-d.style.boxShadow='0 0 25px '+note.color;
-d.innerHTML='<h3>'+note.title+'</h3>';
-
-d.onclick=()=>{
-if(connectMode){
-if(!firstNode) firstNode=note.id;
-else {connections.push({from:firstNode,to:note.id});firstNode=null;connectMode=false;draw();save();}
-return;
-}
-if(disconnectMode){
-if(!firstNode) firstNode=note.id;
-else {
-connections=connections.filter(c=>!((c.from===firstNode&&c.to===note.id)||(c.to===firstNode&&c.from===note.id)));
-firstNode=null;disconnectMode=false;draw();save();
-}
-}
-};
-dragNote(d,note);
-workspace.appendChild(d);
-});
-draw();
+d.style.left='100px';
+d.style.top='100px';
+d.innerHTML='<h3>New Note</h3><p>Content</p>';
+document.getElementById('canvasPage').appendChild(d);
+drag(d);
 }
 
-function dragNote(el,note){
-let down=false,ox=0,oy=0;
+function drag(el){
+let ox,oy,down=false;
 el.onmousedown=e=>{
-down=true;
-ox=e.clientX-note.x*zoom-panX;
-oy=e.clientY-note.y*zoom-panY;
-document.onmousemove=m=>{
-if(!down)return;
-note.x=(m.clientX-ox-panX)/zoom;
-note.y=(m.clientY-oy-panY)/zoom;
-el.style.left=note.x+'px';
-el.style.top=note.y+'px';
-draw();
-};
-document.onmouseup=()=>{down=false;save();};
+down=true;ox=e.offsetX;oy=e.offsetY;
+document.onmousemove=m=>{if(!down)return;el.style.left=(m.clientX-ox)+'px';el.style.top=(m.clientY-oy)+'px';};
+document.onmouseup=()=>down=false;
 };
 }
 
-function draw(){
-ctx.clearRect(0,0,canvas.width,canvas.height);
-connections.forEach(c=>{
-const a=notes.find(n=>n.id===c.from);
-const b=notes.find(n=>n.id===c.to);
-if(!a||!b)return;
-ctx.beginPath();
-ctx.strokeStyle='#06b6d4';
-ctx.lineWidth=3;
-ctx.moveTo(a.x+130,a.y+70);
-ctx.lineTo(b.x+130,b.y+70);
-ctx.stroke();
-});
+function renderTree(){
+const tree=document.getElementById('tree');
+tree.innerHTML='';
+function make(node,parent){
+const div=document.createElement('div');
+div.className='node';
+div.textContent='▼ '+node.title;
+parent.appendChild(div);
+const wrap=document.createElement('div');
+wrap.style.marginLeft='20px';
+parent.appendChild(wrap);
+(node.children||[]).forEach(c=>make(c,wrap));
+}
+framework.forEach(n=>make(n,tree));
 }
 
-function startConnect(){connectMode=true;disconnectMode=false;firstNode=null;}
-function startDisconnect(){disconnectMode=true;connectMode=false;firstNode=null;}
-
-function applyView(){
-workspace.style.transform=`translate(${panX}px,${panY}px) scale(${zoom})`;
+function addRoot(){
+framework.push({id:Date.now(),title:'New Category',children:[]});
+renderTree();
 }
 
-viewport.addEventListener('wheel',e=>{
-e.preventDefault();
-const factor=e.deltaY>0?0.9:1.1;
-zoom=Math.max(0.2,Math.min(4,zoom*factor));
-applyView();
-save();
-},{passive:false});
-
-let panning=false,startX=0,startY=0;
-viewport.addEventListener('mousedown',e=>{
-if(e.target===viewport){
-panning=true;
-startX=e.clientX-panX;
-startY=e.clientY-panY;
-}
-});
-
-document.addEventListener('mousemove',e=>{
-if(!panning)return;
-panX=e.clientX-startX;
-panY=e.clientY-startY;
-applyView();
-});
-
-document.addEventListener('mouseup',()=>{
-panning=false;
-});
-
-function exportData(){
-const data={notes,connections,zoom,panX,panY};
-const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-const a=document.createElement('a');
-a.href=URL.createObjectURL(blob);
-a.download='docx-network.json';
-a.click();
-}
-
-function importData(event){
-const file=event.target.files[0];
-if(!file)return;
-const reader=new FileReader();
-reader.onload=()=>{
-const data=JSON.parse(reader.result);
-notes=data.notes||[];
-connections=data.connections||[];
-zoom=data.zoom||1;
-panX=data.panX||0;
-panY=data.panY||0;
-applyView();
-render();
-save();
-};
-reader.readAsText(file);
-}
-
-function save(){
-localStorage.setItem('docx_save',JSON.stringify({notes,connections,zoom,panX,panY}));
-}
-function load(){
-const d=JSON.parse(localStorage.getItem('docx_save')||'{}');
-notes=d.notes||[];
-connections=d.connections||[];
-zoom=d.zoom||1;
-panX=d.panX||0;
-panY=d.panY||0;
-applyView();
-render();
-}
-load();
+renderTree();
 </script>
 </body>
 </html>
