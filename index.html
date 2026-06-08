@@ -23,7 +23,9 @@
   --mono: 'Share Tech Mono', monospace;
   --sans: 'Rajdhani', sans-serif;
 }
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
 html, body {
   height: 100%;
   background: var(--bg);
@@ -31,6 +33,7 @@ html, body {
   font-family: var(--mono);
   overflow: hidden;
 }
+
 /* ── CANVAS BACKGROUND ── */
 #canvas-bg {
   position: fixed;
@@ -38,6 +41,7 @@ html, body {
   z-index: 0;
   pointer-events: none;
 }
+
 /* ── SCANLINES ── */
 body::after {
   content: '';
@@ -53,6 +57,7 @@ body::after {
   pointer-events: none;
   z-index: 999;
 }
+
 /* ── LAYOUT ── */
 #app {
   position: relative;
@@ -62,6 +67,7 @@ body::after {
   flex-direction: column;
   overflow: hidden;
 }
+
 /* ── HEADER ── */
 header {
   flex-shrink: 0;
@@ -76,6 +82,7 @@ header {
   position: relative;
   z-index: 10;
 }
+
 header::after {
   content: '';
   position: absolute;
@@ -84,10 +91,12 @@ header::after {
   background: linear-gradient(90deg, transparent, var(--cyan), transparent);
   animation: scanH 4s ease-in-out infinite;
 }
+
 @keyframes scanH {
   0%,100% { opacity: 0.3; }
   50% { opacity: 1; }
 }
+
 .logo {
   font-family: var(--sans);
   font-size: 20px;
@@ -98,13 +107,17 @@ header::after {
   white-space: nowrap;
   cursor: default;
 }
+
 .logo span { color: var(--text2); font-weight: 300; }
+
 .header-sep { flex: 1; }
+
 #search-wrap {
   position: relative;
   display: flex;
   align-items: center;
 }
+
 #search-wrap::before {
   content: '⌕';
   position: absolute;
@@ -113,6 +126,7 @@ header::after {
   font-size: 16px;
   pointer-events: none;
 }
+
 #search {
   background: rgba(0,212,255,0.05);
   border: 1px solid rgba(0,212,255,0.2);
@@ -125,12 +139,15 @@ header::after {
   width: 200px;
   transition: border-color 0.2s, box-shadow 0.2s, width 0.3s;
 }
+
 #search:focus {
   border-color: var(--cyan);
   box-shadow: 0 0 12px rgba(0,212,255,0.2);
   width: 260px;
 }
+
 #search::placeholder { color: rgba(100,160,200,0.4); }
+
 .hbtn {
   background: rgba(0,212,255,0.06);
   border: 1px solid rgba(0,212,255,0.2);
@@ -144,11 +161,13 @@ header::after {
   transition: all 0.15s;
   white-space: nowrap;
 }
+
 .hbtn:hover {
   background: rgba(0,212,255,0.14);
   box-shadow: 0 0 12px rgba(0,212,255,0.25);
   border-color: var(--cyan);
 }
+
 /* ── LEGEND ── */
 #legend {
   flex-shrink: 0;
@@ -162,29 +181,354 @@ header::after {
   color: var(--text2);
   letter-spacing: 0.06em;
 }
+
 .leg-item { display: flex; align-items: center; gap: 6px; }
 .leg-dot {
   width: 8px; height: 8px;
   border-radius: 50%;
 }
-/* rest of your styles remain unchanged */
+
+/* ── MAIN BODY ── */
+#main {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ── TREE PANEL ── */
+#tree-panel {
+  width: 340px;
+  flex-shrink: 0;
+  background: rgba(5,13,26,0.8);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 8px;
+  position: relative;
+}
+
+#tree-panel::-webkit-scrollbar { width: 4px; }
+#tree-panel::-webkit-scrollbar-track { background: transparent; }
+#tree-panel::-webkit-scrollbar-thumb { background: rgba(0,212,255,0.2); border-radius: 2px; }
+
+/* ── RIGHT PANEL ── */
+#right-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── D3 SVG AREA ── */
+#graph-area {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+#graph-svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ── INFO BAR ── */
+#info-bar {
+  flex-shrink: 0;
+  background: rgba(5,13,26,0.95);
+  border-top: 1px solid var(--border);
+  padding: 6px 20px;
+  font-size: 10px;
+  color: var(--text2);
+  letter-spacing: 0.08em;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+#info-bar span { color: var(--cyan); }
+
+/* ── TREE NODES ── */
+ul.tree-ul { list-style: none; padding: 0; }
+ul.tree-children {
+  list-style: none;
+  padding: 0 0 0 16px;
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.25s;
+  opacity: 0;
+}
+ul.tree-children.open {
+  max-height: 2000px;
+  opacity: 1;
+}
+
+li.tree-item { position: relative; }
+li.tree-item + li.tree-item { border-top: 1px solid rgba(0,212,255,0.04); }
+
+.tree-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition: background 0.12s, transform 0.1s;
+  position: relative;
+}
+
+.tree-row:hover { transform: translateX(2px); }
+
+.tree-row.active {
+  background: rgba(0,212,255,0.08) !important;
+}
+
+.tree-row::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 1px;
+  background: var(--cyan);
+  transition: width 0.2s;
+  border-radius: 1px;
+}
+.tree-row:hover::before { width: 3px; }
+.tree-row.active::before { width: 3px; background: var(--cyan); }
+
+.t-arrow {
+  width: 12px;
+  font-size: 8px;
+  color: rgba(0,212,255,0.4);
+  transition: transform 0.2s, color 0.2s;
+  flex-shrink: 0;
+  text-align: center;
+}
+.t-arrow.open { transform: rotate(90deg); color: var(--cyan); }
+.t-arrow.leaf { opacity: 0; }
+
+.t-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: box-shadow 0.2s;
+}
+.tree-row:hover .t-dot,
+.tree-row.active .t-dot {
+  box-shadow: 0 0 8px currentColor;
+}
+
+.t-label {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  transition: color 0.15s;
+}
+
+.t-badge {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  letter-spacing: 0.05em;
+}
+
+/* depth colors */
+.d0 .t-label { color: #e8f4ff; font-size: 13px; font-weight: 600; }
+.d0 .t-dot { background: var(--cyan); width: 9px; height: 9px; }
+.d1 .t-label { color: #b0d8f0; }
+.d1 .t-dot { background: var(--purple); }
+.d2 .t-label { color: #88b8d8; }
+.d2 .t-dot { background: var(--green); width: 6px; height: 6px; }
+.d3 .t-label { color: #6898b8; font-size: 11px; }
+.d3 .t-dot { background: var(--amber); width: 5px; height: 5px; }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.tree-item {
+  animation: fadeSlideIn 0.3s ease both;
+}
+
+@keyframes nodeGlow {
+  0%,100% { filter: drop-shadow(0 0 3px var(--cyan)); }
+  50% { filter: drop-shadow(0 0 8px var(--cyan)); }
+}
+
+@keyframes linkPulse {
+  0%,100% { stroke-opacity: 0.25; }
+  50% { stroke-opacity: 0.6; }
+}
+
+/* ── TOOLTIP ── */
+#tooltip {
+  position: fixed;
+  pointer-events: none;
+  background: rgba(5,13,26,0.95);
+  border: 1px solid rgba(0,212,255,0.35);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 11px;
+  color: var(--text);
+  z-index: 100;
+  opacity: 0;
+  transition: opacity 0.15s;
+  max-width: 220px;
+  box-shadow: 0 0 20px rgba(0,212,255,0.15);
+}
+#tooltip.show { opacity: 1; }
+#tooltip-title { color: var(--cyan); font-size: 13px; margin-bottom: 4px; font-family: var(--sans); font-weight: 600; }
+#tooltip-type { font-size: 9px; letter-spacing: .08em; margin-bottom: 6px; }
+#tooltip-desc { color: var(--text2); line-height: 1.5; }
+
+/* ── D3 graph styles ── */
+.g-node circle {
+  cursor: pointer;
+  transition: r 0.2s;
+}
+.g-node text {
+  pointer-events: none;
+  font-family: var(--mono);
+}
+.g-link {
+  fill: none;
+  animation: linkPulse 3s ease-in-out infinite;
+}
+
+/* ── INTRO ANIMATION ── */
+#intro {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  animation: introFade 0.5s ease 2s both;
+}
+
+@keyframes introFade {
+  to { opacity: 0; pointer-events: none; }
+}
+
+.intro-logo {
+  font-family: var(--sans);
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--cyan);
+  text-shadow: 0 0 40px rgba(0,212,255,0.8);
+  animation: introLogo 1.5s ease both;
+}
+
+@keyframes introLogo {
+  from { opacity: 0; letter-spacing: 0.6em; }
+  to { opacity: 1; letter-spacing: 0.2em; }
+}
+
+.intro-sub {
+  font-size: 12px;
+  color: var(--text2);
+  letter-spacing: 0.3em;
+  animation: introSub 0.6s ease 0.8s both;
+}
+
+@keyframes introSub {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.intro-bar {
+  width: 300px;
+  height: 2px;
+  background: rgba(0,212,255,0.1);
+  border-radius: 1px;
+  overflow: hidden;
+  margin-top: 8px;
+  animation: introSub 0.3s ease 1s both;
+}
+
+.intro-bar-fill {
+  height: 100%;
+  background: var(--cyan);
+  box-shadow: 0 0 10px var(--cyan);
+  animation: introBarFill 1s ease 1.1s both;
+}
+
+@keyframes introBarFill {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+/* highlight search */
+.hl {
+  background: rgba(255,183,0,.25);
+  color: #ffd060;
+  border-radius: 2px;
+}
+li.tree-item.hidden { display: none; }
+
+/* tab switch */
+#view-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 8px 12px 0;
+  background: rgba(5,13,26,0.9);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.vtab {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 5px 14px;
+  border-radius: 4px 4px 0 0;
+  border: 1px solid transparent;
+  border-bottom: none;
+  cursor: pointer;
+  color: var(--text2);
+  letter-spacing: .06em;
+  transition: all .2s;
+  background: transparent;
+}
+.vtab.active {
+  background: rgba(0,212,255,0.08);
+  border-color: var(--border);
+  color: var(--cyan);
+}
+.vtab:hover:not(.active) { color: var(--text); }
+
+#view-tree, #view-graph { width: 100%; height: 100%; }
+#view-graph { display: none; }
 </style>
 </head>
 <body>
+
 <!-- INTRO SPLASH -->
 <div id="intro">
   <div class="intro-logo">OSINT</div>
   <div class="intro-sub">OPEN SOURCE INTELLIGENCE FRAMEWORK</div>
   <div class="intro-bar"><div class="intro-bar-fill"></div></div>
 </div>
+
 <!-- CANVAS BG -->
 <canvas id="canvas-bg"></canvas>
+
 <!-- TOOLTIP -->
 <div id="tooltip">
   <div id="tooltip-title"></div>
   <div id="tooltip-type"></div>
   <div id="tooltip-desc"></div>
 </div>
+
 <div id="app">
   <!-- HEADER -->
   <header>
@@ -193,13 +537,10 @@ header::after {
     <div id="search-wrap">
       <input id="search" placeholder="search tools & categories..." autocomplete="off">
     </div>
-    
-    <a href="docx.html" class="hbtn">📚 Notes</a>
-    <a href="framework.html" class="hbtn">🕸️ Framework</a>
-    
     <button class="hbtn" onclick="expandAll()">[ EXPAND ALL ]</button>
     <button class="hbtn" onclick="collapseAll()">[ COLLAPSE ]</button>
   </header>
+
   <!-- LEGEND -->
   <div id="legend">
     <span style="color:var(--text2);margin-right:4px">LEGEND:</span>
@@ -210,12 +551,14 @@ header::after {
     <div class="leg-item"><div class="leg-dot" style="background:var(--red)"></div> <span style="color:var(--red);font-size:10px;padding:1px 4px;border:1px solid rgba(255,59,59,.2);border-radius:2px">!</span> Caution</div>
     <div style="margin-left:auto;color:rgba(0,212,255,.3)">v2.0 // OSINT-FW</div>
   </div>
+
   <!-- MAIN -->
   <div id="main">
     <!-- TREE PANEL -->
     <div id="tree-panel">
       <ul class="tree-ul" id="tree-root"></ul>
     </div>
+
     <!-- RIGHT -->
     <div id="right-panel">
       <div id="view-tabs">
@@ -231,6 +574,7 @@ header::after {
       </div>
     </div>
   </div>
+
   <!-- INFO BAR -->
   <div id="info-bar">
     <div>NODES: <span id="stat-nodes">0</span></div>
@@ -240,12 +584,637 @@ header::after {
     <div id="stat-msg" style="color:rgba(0,212,255,.35);letter-spacing:.08em">OSINT FRAMEWORK — FOR EDUCATIONAL USE ONLY</div>
   </div>
 </div>
+
 <!-- D3 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <script>
-// (All your existing JavaScript remains unchanged)
-const TREE_DATA = [ /* ... your full data ... */ ];
-// ... rest of your script ...
+// ── DATA ──────────────────────────────────────────────────────────────────
+const TREE_DATA = [
+  {l:'Username',c:[
+    {l:'Username Search',c:[
+      {l:'Sherlock',t:'tool',desc:'Hunt down social media accounts by username'},
+      {l:'WhatsMyName',t:'tool',desc:'Check username availability across platforms'},
+      {l:'Namechk',t:'site',desc:'Search username on 100+ social networks'},
+      {l:'KnowEm',t:'site',desc:'Check usernames on 500+ networks'},
+      {l:'Instant Username',t:'site',desc:'Real-time username availability checker'},
+    ]},
+    {l:'Social Aggregators',c:[
+      {l:'Pipl',t:'paid',desc:'Deep web people search engine'},
+      {l:'Spokeo',t:'paid',desc:'People search and data aggregation'},
+      {l:'FullContact',t:'site',desc:'Identity resolution platform'},
+    ]},
+  ]},
+  {l:'Email Address',c:[
+    {l:'Breach Lookup',c:[
+      {l:'HaveIBeenPwned',t:'tool',desc:'Check if email appears in data breaches'},
+      {l:'DeHashed',t:'paid',desc:'Search exposed credentials database'},
+      {l:'IntelX',t:'tool',desc:'Intelligence search across dark web & leaks'},
+      {l:'LeakCheck',t:'site',desc:'Credential leak verification service'},
+      {l:'Snusbase',t:'paid',desc:'Database search for leaked credentials'},
+    ]},
+    {l:'Email Verification',c:[
+      {l:'Hunter.io',t:'paid',desc:'Find and verify email addresses'},
+      {l:'EmailRep.io',t:'tool',desc:'Email address reputation & intel'},
+      {l:'Verify-Email',t:'site',desc:'SMTP email verification tool'},
+      {l:'NeverBounce',t:'paid',desc:'Real-time email verification'},
+    ]},
+    {l:'Account Discovery',c:[
+      {l:'Holehe',t:'tool',desc:'Check if email is linked to online accounts'},
+      {l:'GHunt',t:'tool',desc:'Google account investigation tool'},
+      {l:'Epieos',t:'tool',desc:'OSINT on email addresses & phone numbers'},
+    ]},
+  ]},
+  {l:'Domain / IP',c:[
+    {l:'WHOIS & Registration',c:[
+      {l:'ICANN WHOIS',t:'site',desc:'Official ICANN domain registration lookup'},
+      {l:'DomainTools',t:'paid',desc:'Domain history, WHOIS, and DNS data'},
+      {l:'ViewDNS.info',t:'tool',desc:'Multiple DNS & IP lookup tools'},
+      {l:'WhoXY',t:'site',desc:'WHOIS API with historical data'},
+    ]},
+    {l:'DNS Enumeration',c:[
+      {l:'DNSdumpster',t:'tool',desc:'Domain research & DNS recon tool'},
+      {l:'SecurityTrails',t:'paid',desc:'Historical DNS and domain data'},
+      {l:'Sublist3r',t:'tool',desc:'Fast subdomains enumeration tool'},
+      {l:'Amass',t:'tool',desc:'In-depth DNS enumeration tool'},
+      {l:'Subfinder',t:'tool',desc:'Fast passive subdomain enumeration'},
+    ]},
+    {l:'IP Intelligence',c:[
+      {l:'Shodan',t:'tool',desc:'Search engine for internet-connected devices'},
+      {l:'Censys',t:'tool',desc:'Discover, monitor, and analyze infrastructure'},
+      {l:'GreyNoise',t:'site',desc:'Classify internet-wide scan traffic'},
+      {l:'IPinfo.io',t:'site',desc:'IP address details and geolocation'},
+      {l:'AbuseIPDB',t:'site',desc:'IP address abuse reporting & lookup'},
+    ]},
+    {l:'Website Analysis',c:[
+      {l:'BuiltWith',t:'site',desc:'Technology profiler for websites'},
+      {l:'Wappalyzer',t:'tool',desc:'Identify technologies on websites'},
+      {l:'Netcraft',t:'site',desc:'Internet security & anti-phishing'},
+      {l:'Wayback Machine',t:'tool',desc:'Internet Archive website snapshots'},
+    ]},
+  ]},
+  {l:'Social Media',c:[
+    {l:'Twitter / X',c:[
+      {l:'Twint',t:'tool',desc:'Twitter intelligence tool without API'},
+      {l:'Social Bearing',t:'site',desc:'Twitter analytics and search'},
+      {l:'Tinfoleak',t:'tool',desc:'Twitter intelligence gathering tool'},
+      {l:'TweetDeck',t:'site',desc:'Advanced Twitter monitoring dashboard'},
+    ]},
+    {l:'Instagram',c:[
+      {l:'Picuki',t:'site',desc:'Browse and analyse Instagram profiles'},
+      {l:'InstaLoader',t:'tool',desc:'Download Instagram posts and metadata'},
+      {l:'Dumpor',t:'site',desc:'Anonymous Instagram story viewer'},
+      {l:'ImgInn',t:'site',desc:'Instagram viewer & downloader'},
+    ]},
+    {l:'LinkedIn',c:[
+      {l:'LinkedIn Search',t:'site',desc:'Official LinkedIn people search'},
+      {l:'Recruit\'em',t:'site',desc:'Boolean search for LinkedIn profiles'},
+      {l:'LeadLeaper',t:'paid',desc:'LinkedIn email finder extension'},
+    ]},
+    {l:'Reddit',c:[
+      {l:'Pushshift',t:'tool',desc:'Reddit data search and analysis'},
+      {l:'Reddit Investigator',t:'site',desc:'Analyse Reddit user activity'},
+      {l:'SnoopSnoo',t:'site',desc:'Reddit user and subreddit analytics'},
+      {l:'RedditMetis',t:'site',desc:'Reddit user analysis tool'},
+    ]},
+    {l:'Facebook',c:[
+      {l:'Sowdust Graph Search',t:'tool',desc:'Facebook graph search interface'},
+      {l:'WhoPostedWhat',t:'site',desc:'Facebook keyword search tool'},
+      {l:'StalkFace',t:'site',desc:'Facebook profile viewer & analyser'},
+    ]},
+  ]},
+  {l:'Phone Number',c:[
+    {l:'Reverse Lookup',c:[
+      {l:'TrueCaller',t:'site',desc:'Global phone number search database'},
+      {l:'SpyDialer',t:'site',desc:'Free reverse phone number lookup'},
+      {l:'NumLookup',t:'site',desc:'Reverse phone lookup service'},
+      {l:'CallerID Test',t:'tool',desc:'Phone number carrier and owner lookup'},
+    ]},
+    {l:'Carrier & Validation',c:[
+      {l:'FreeCarrierLookup',t:'site',desc:'Phone carrier identification'},
+      {l:'PhoneInfoga',t:'tool',desc:'Advanced phone number OSINT tool'},
+      {l:'Twilio Lookup',t:'paid',desc:'Phone number carrier & format validation'},
+    ]},
+  ]},
+  {l:'Images / Video',c:[
+    {l:'Reverse Image Search',c:[
+      {l:'Google Images',t:'site',desc:'Reverse image search by Google'},
+      {l:'TinEye',t:'site',desc:'Reverse image search engine'},
+      {l:'Yandex Images',t:'site',desc:'Russian reverse image search, highly effective'},
+      {l:'Bing Visual',t:'site',desc:'Microsoft visual search engine'},
+    ]},
+    {l:'Metadata & EXIF',c:[
+      {l:'ExifTool',t:'tool',desc:'Read/write meta information in files'},
+      {l:'Jeffrey\'s Exif Viewer',t:'site',desc:'Online EXIF data viewer'},
+      {l:'Metadata2go',t:'site',desc:'Online metadata extractor'},
+      {l:'Jimpl',t:'site',desc:'EXIF data viewer for photos'},
+    ]},
+    {l:'Video Analysis',c:[
+      {l:'InVID / WeVerify',t:'tool',desc:'Video verification & analysis plugin'},
+      {l:'YouTube Data Viewer',t:'tool',desc:'Extract YouTube video metadata'},
+      {l:'Amnesty YT Tool',t:'tool',desc:'YouTube upload time & thumbnail checker'},
+    ]},
+    {l:'Facial Recognition',c:[
+      {l:'PimEyes',t:'paid',caution:true,desc:'Face search engine across the web'},
+      {l:'FaceCheck.ID',t:'site',caution:true,desc:'Facial recognition OSINT tool'},
+    ]},
+  ]},
+  {l:'Geolocation',c:[
+    {l:'Mapping Tools',c:[
+      {l:'Google Earth',t:'site',desc:'Satellite imagery and maps'},
+      {l:'Google Maps',t:'site',desc:'Street maps and Street View'},
+      {l:'OpenStreetMap',t:'site',desc:'Open-source collaborative map'},
+      {l:'Bing Maps',t:'site',desc:'Microsoft mapping service'},
+    ]},
+    {l:'IP Geolocation',c:[
+      {l:'IPinfo.io',t:'tool',desc:'IP geolocation and ASN data'},
+      {l:'ip-api',t:'tool',desc:'Free IP geolocation API'},
+      {l:'MaxMind GeoIP',t:'paid',desc:'Enterprise geolocation database'},
+    ]},
+    {l:'WiFi & Cell',c:[
+      {l:'Wigle.net',t:'paid',desc:'Wireless network mapping database'},
+      {l:'OpenCelliD',t:'site',desc:'Open cell tower database'},
+      {l:'Mozilla Location',t:'tool',desc:'Cell and WiFi positioning service'},
+    ]},
+    {l:'Street Level',c:[
+      {l:'Google Street View',t:'site',desc:'360-degree street-level imagery'},
+      {l:'Mapillary',t:'site',desc:'Crowdsourced street-level imagery'},
+      {l:'GeoGuessr',t:'site',desc:'Location guessing game (great for training)'},
+    ]},
+  ]},
+  {l:'Documents',c:[
+    {l:'File Metadata',c:[
+      {l:'FOCA',t:'tool',desc:'Extract metadata from documents'},
+      {l:'ExifTool',t:'tool',desc:'Universal metadata extraction tool'},
+      {l:'Metagoofil',t:'tool',desc:'Extract metadata from public documents'},
+    ]},
+    {l:'Document Search',c:[
+      {l:'Google Dorks',t:'tool',desc:'Advanced Google search operators'},
+      {l:'Scribd',t:'site',desc:'Document sharing and discovery'},
+      {l:'DocSea',t:'site',desc:'Search engine for online documents'},
+      {l:'PDFSearchEngine',t:'site',desc:'Dedicated PDF search platform'},
+    ]},
+    {l:'Code & Paste',c:[
+      {l:'GitHub',t:'site',desc:'Search code repositories for intel'},
+      {l:'Pastebin',t:'site',desc:'Search pastes for exposed data'},
+      {l:'Grep.app',t:'tool',desc:'Search across git repos'},
+      {l:'SearchCode',t:'site',desc:'Code search engine'},
+    ]},
+  ]},
+  {l:'Threat Intelligence',c:[
+    {l:'IOC Lookup',c:[
+      {l:'VirusTotal',t:'tool',desc:'Analyse files, URLs, IPs for malware'},
+      {l:'AlienVault OTX',t:'tool',desc:'Open threat intelligence community'},
+      {l:'ThreatFox',t:'site',desc:'IOC database by Abuse.ch'},
+      {l:'MalwareBazaar',t:'site',desc:'Malware sample sharing & lookup'},
+      {l:'URLScan.io',t:'tool',desc:'Website scanner and analyzer'},
+    ]},
+    {l:'Threat Actors',c:[
+      {l:'MITRE ATT&CK',t:'site',desc:'Knowledge base of adversary tactics'},
+      {l:'Maltego',t:'paid',desc:'Link analysis and data mining tool'},
+      {l:'Recorded Future',t:'paid',desc:'Real-time threat intelligence platform'},
+    ]},
+    {l:'Vulnerability',c:[
+      {l:'NVD / CVE',t:'site',desc:'National Vulnerability Database'},
+      {l:'Exploit-DB',t:'site',desc:'Archive of public exploits'},
+      {l:'Shodan Exploits',t:'tool',desc:'Search for vulnerable systems'},
+      {l:'PacketStorm',t:'site',desc:'Security tools and exploits archive'},
+    ]},
+  ]},
+  {l:'Dark Web',c:[
+    {l:'Search Engines',c:[
+      {l:'Ahmia',t:'site',desc:'Search hidden services on Tor network'},
+      {l:'DarkSearch',t:'site',desc:'Dark web search engine'},
+      {l:'Not Evil',t:'site',desc:'.onion search engine'},
+      {l:'Haystak',t:'site',desc:'Dark web search engine'},
+    ]},
+    {l:'Monitoring',c:[
+      {l:'DarkOwl',t:'paid',desc:'Dark web data collection and monitoring'},
+      {l:'IntelX',t:'tool',desc:'Dark web and leak data search'},
+      {l:'DeepSearch',t:'paid',desc:'Dark web monitoring service'},
+    ]},
+    {l:'Paste & Leak Sites',c:[
+      {l:'Pastebin',t:'site',desc:'Popular paste site often used for leaks'},
+      {l:'GhostBin',t:'site',desc:'Anonymous paste service'},
+      {l:'Leaked.site',t:'site',caution:true,desc:'Leaked database aggregator'},
+    ]},
+  ]},
+  {l:'People Search',c:[
+    {l:'US-Based Aggregators',c:[
+      {l:'Pipl',t:'paid',desc:'Deep web people search'},
+      {l:'BeenVerified',t:'paid',desc:'Background check service'},
+      {l:'Intelius',t:'paid',desc:'People search and background reports'},
+      {l:'Spokeo',t:'paid',desc:'Search by name, phone, or address'},
+      {l:'PeopleFinder',t:'paid',desc:'US people finder database'},
+    ]},
+    {l:'Public Records',c:[
+      {l:'PACER',t:'site',desc:'Federal court records access'},
+      {l:'OpenCorporates',t:'site',desc:'World\'s largest open companies database'},
+      {l:'VitalChek',t:'site',desc:'Official vital records ordering'},
+      {l:'BlackbookOnline',t:'site',desc:'Free public records directory'},
+    ]},
+  ]},
+  {l:'Transportation',c:[
+    {l:'Aircraft',c:[
+      {l:'FlightAware',t:'site',desc:'Live and historical flight tracking'},
+      {l:'FlightRadar24',t:'site',desc:'Real-time flight tracking'},
+      {l:'ADS-B Exchange',t:'site',desc:'Unfiltered global flight data'},
+      {l:'OpenSky Network',t:'tool',desc:'Open-access ADS-B flight data'},
+    ]},
+    {l:'Maritime',c:[
+      {l:'MarineTraffic',t:'site',desc:'Live ship tracking and port info'},
+      {l:'VesselFinder',t:'site',desc:'Free AIS vessel tracking'},
+      {l:'FleetMon',t:'site',desc:'Maritime vessel intelligence'},
+      {l:'MyShipTracking',t:'site',desc:'Global vessel tracking system'},
+    ]},
+    {l:'Vehicle',c:[
+      {l:'VINCheck',t:'site',desc:'Free VIN number lookup'},
+      {l:'AutoCheck',t:'paid',desc:'Vehicle history reports'},
+      {l:'Carfax',t:'paid',desc:'Car history & accident reports'},
+    ]},
+  ]},
+  {l:'Search Engines',c:[
+    {l:'General',c:[
+      {l:'Google',t:'site',desc:'Most comprehensive web index'},
+      {l:'Bing',t:'site',desc:'Microsoft search engine'},
+      {l:'DuckDuckGo',t:'site',desc:'Privacy-focused search engine'},
+      {l:'Yandex',t:'site',desc:'Russian search with strong image search'},
+      {l:'Baidu',t:'site',desc:'Chinese web search engine'},
+    ]},
+    {l:'Specialized',c:[
+      {l:'Shodan',t:'tool',desc:'Search engine for internet devices'},
+      {l:'Censys',t:'tool',desc:'Infrastructure discovery and monitoring'},
+      {l:'PublicWWW',t:'site',desc:'Source code search engine'},
+      {l:'GrepApp',t:'tool',desc:'Regex search across public repos'},
+      {l:'Carrot2',t:'tool',desc:'Clustering search engine'},
+    ]},
+    {l:'Google Dorking',c:[
+      {l:'Google Hacking DB',t:'site',desc:'Repository of Google dorks (GHDB)'},
+      {l:'DorkSearch',t:'tool',desc:'Google dork search helper'},
+      {l:'Pentest-Tools Dork',t:'site',desc:'Google dorking scanner'},
+    ]},
+  ]},
+  {l:'Web Archives',c:[
+    {l:'Snapshots',c:[
+      {l:'Wayback Machine',t:'tool',desc:'Internet Archive web snapshots'},
+      {l:'Archive.today',t:'site',desc:'Save and view website snapshots'},
+      {l:'CachedView.nl',t:'site',desc:'View cached versions of websites'},
+      {l:'TimeTravel',t:'tool',desc:'Multi-archive web time travel'},
+    ]},
+    {l:'Source Code History',c:[
+      {l:'GitHub Archive',t:'site',desc:'GitHub public activity archive'},
+      {l:'Sourcegraph',t:'tool',desc:'Universal code search'},
+      {l:'GitLeaks',t:'tool',desc:'Detect secrets in git repos'},
+    ]},
+  ]},
+];
+
+// ── CANVAS BACKGROUND ──────────────────────────────────────────────────────
+const canvas = document.getElementById('canvas-bg');
+const ctx = canvas.getContext('2d');
+let W, H, particles = [], gridLines = [];
+
+function resizeCanvas() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// floating particles
+for (let i = 0; i < 50; i++) {
+  particles.push({
+    x: Math.random() * 2000,
+    y: Math.random() * 1200,
+    vx: (Math.random() - 0.5) * 0.15,
+    vy: (Math.random() - 0.5) * 0.15,
+    r: Math.random() * 1.2 + 0.3,
+    a: Math.random() * 0.4 + 0.05,
+    phase: Math.random() * Math.PI * 2
+  });
+}
+
+let tick = 0;
+function animCanvas() {
+  ctx.clearRect(0, 0, W, H);
+  tick++;
+
+  // grid
+  ctx.strokeStyle = 'rgba(0,212,255,0.04)';
+  ctx.lineWidth = 0.5;
+  const gs = 60;
+  for (let x = 0; x < W; x += gs) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  for (let y = 0; y < H; y += gs) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+
+  // scanning line
+  const scanY = (tick * 0.4) % H;
+  const sg = ctx.createLinearGradient(0, scanY - 30, 0, scanY + 30);
+  sg.addColorStop(0, 'rgba(0,212,255,0)');
+  sg.addColorStop(0.5, 'rgba(0,212,255,0.04)');
+  sg.addColorStop(1, 'rgba(0,212,255,0)');
+  ctx.fillStyle = sg;
+  ctx.fillRect(0, scanY - 30, W, 60);
+
+  // particles
+  particles.forEach(p => {
+    p.x += p.vx; p.y += p.vy;
+    if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+    if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+    const pulse = Math.sin(tick * 0.02 + p.phase) * 0.3 + 0.7;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(0,212,255,${p.a * pulse})`;
+    ctx.fill();
+  });
+
+  requestAnimationFrame(animCanvas);
+}
+animCanvas();
+
+// ── TREE BUILD ─────────────────────────────────────────────────────────────
+const typeColor = { tool:'#39ff14', site:'#00d4ff', paid:'#ffb700', caution:'#ff3b3b' };
+const typeBadge = { tool:'T', site:'↗', paid:'$', caution:'!' };
+const typeDesc  = { tool:'Free Tool', site:'Website', paid:'Paid / Reg Required', caution:'Use with Caution' };
+
+let totalNodes = 0, totalCats = 0;
+
+function buildNode(item, depth) {
+  const li = document.createElement('li');
+  li.className = `tree-item d${depth}`;
+  li.style.animationDelay = `${totalNodes * 0.012}s`;
+  li.dataset.label = (item.l || '').toLowerCase();
+  totalNodes++;
+  if (depth === 0) totalCats++;
+
+  const row = document.createElement('div');
+  row.className = `tree-row d${depth}`;
+
+  const arrow = document.createElement('span');
+  arrow.className = 't-arrow' + (item.c ? '' : ' leaf');
+  arrow.textContent = '▶';
+
+  const dot = document.createElement('span');
+  dot.className = 't-dot';
+  if (depth === 0) dot.style.cssText = `background:var(--cyan);width:9px;height:9px;box-shadow:0 0 8px var(--cyan)`;
+  else if (depth === 1) dot.style.background = 'var(--purple)';
+  else if (depth === 2) {
+    const c = item.caution ? typeColor.caution : (item.t ? typeColor[item.t] : 'var(--green)');
+    dot.style.cssText = `background:${c};width:6px;height:6px`;
+  } else dot.style.cssText = `background:var(--amber);width:5px;height:5px`;
+
+  const lbl = document.createElement('span');
+  lbl.className = 't-label';
+  lbl.textContent = item.l;
+
+  row.appendChild(arrow); row.appendChild(dot); row.appendChild(lbl);
+
+  // badge for leaf nodes
+  if (!item.c && item.t) {
+    const b = document.createElement('span');
+    b.className = 't-badge';
+    const col = item.caution ? typeColor.caution : typeColor[item.t];
+    b.textContent = item.caution ? '!' : typeBadge[item.t];
+    b.style.cssText = `color:${col};background:${col}18;border:1px solid ${col}30`;
+    row.appendChild(b);
+  }
+
+  li.appendChild(row);
+
+  // hover tooltip
+  if (item.desc) {
+    const tt = document.getElementById('tooltip');
+    row.addEventListener('mouseenter', (e) => {
+      document.getElementById('tooltip-title').textContent = item.l;
+      document.getElementById('tooltip-type').textContent = item.t ? typeDesc[item.t] : '';
+      document.getElementById('tooltip-type').style.color = item.t ? typeColor[item.t] : 'var(--text2)';
+      document.getElementById('tooltip-desc').textContent = item.desc || '';
+      tt.classList.add('show');
+      moveTT(e);
+    });
+    row.addEventListener('mousemove', moveTT);
+    row.addEventListener('mouseleave', () => tt.classList.remove('show'));
+  }
+
+  if (item.c && item.c.length) {
+    const ul = document.createElement('ul');
+    ul.className = 'tree-children';
+    item.c.forEach(ch => ul.appendChild(buildNode(ch, depth + 1)));
+    li.appendChild(ul);
+
+    row.addEventListener('click', () => {
+      const open = ul.classList.toggle('open');
+      arrow.classList.toggle('open', open);
+      row.classList.toggle('active', open);
+      updateStats();
+      if (open && depth === 0) showGraphFor(item);
+    });
+  }
+
+  return li;
+}
+
+function moveTT(e) {
+  const tt = document.getElementById('tooltip');
+  const x = Math.min(e.clientX + 16, window.innerWidth - 240);
+  const y = Math.min(e.clientY + 12, window.innerHeight - 120);
+  tt.style.left = x + 'px';
+  tt.style.top = y + 'px';
+}
+
+const root = document.getElementById('tree-root');
+TREE_DATA.forEach((item, i) => {
+  const li = buildNode(item, 0);
+  li.style.animationDelay = `${2.1 + i * 0.06}s`;
+  li.style.animationFillMode = 'both';
+  root.appendChild(li);
+});
+
+document.getElementById('stat-nodes').textContent = totalNodes;
+document.getElementById('stat-cats').textContent = totalCats;
+
+// ── SEARCH ──────────────────────────────────────────────────────────────────
+document.getElementById('search').addEventListener('input', function () {
+  const q = this.value.toLowerCase().trim();
+  if (!q) {
+    document.querySelectorAll('.tree-item').forEach(el => { el.classList.remove('hidden'); });
+    document.querySelectorAll('.t-label').forEach(el => { el.innerHTML = el.textContent; });
+    return;
+  }
+  expandAll();
+  document.querySelectorAll('li.tree-item').forEach(li => {
+    const match = li.dataset.label.includes(q);
+    const childMatch = li.querySelector(`li[data-label*="${q}"]`);
+    li.classList.toggle('hidden', !match && !childMatch);
+  });
+  document.querySelectorAll('.t-label').forEach(el => {
+    const txt = el.textContent;
+    const idx = txt.toLowerCase().indexOf(q);
+    if (idx >= 0) {
+      el.innerHTML = txt.slice(0, idx) + `<mark class="hl">${txt.slice(idx, idx + q.length)}</mark>` + txt.slice(idx + q.length);
+    }
+  });
+});
+
+function expandAll() {
+  document.querySelectorAll('.tree-children').forEach(u => u.classList.add('open'));
+  document.querySelectorAll('.t-arrow').forEach(a => a.classList.add('open'));
+  document.querySelectorAll('.tree-row').forEach(r => r.classList.remove('active'));
+  updateStats();
+}
+
+function collapseAll() {
+  document.querySelectorAll('.tree-children').forEach(u => u.classList.remove('open'));
+  document.querySelectorAll('.t-arrow').forEach(a => a.classList.remove('open'));
+  document.querySelectorAll('.tree-row').forEach(r => r.classList.remove('active'));
+  updateStats();
+  resetGraph();
+}
+
+function updateStats() {
+  document.getElementById('stat-open').textContent = document.querySelectorAll('.tree-children.open').length;
+}
+
+// ── D3 GRAPH ───────────────────────────────────────────────────────────────
+const svg = d3.select('#view-graph');
+let sim, gLink, gNode;
+let graphActive = false;
+
+function initGraph() {
+  svg.selectAll('*').remove();
+  const el = document.getElementById('view-graph');
+  const W = el.clientWidth, H = el.clientHeight;
+
+  const g = svg.append('g').attr('class', 'zoom-g');
+
+  svg.call(d3.zoom()
+    .scaleExtent([0.2, 4])
+    .on('zoom', e => g.attr('transform', e.transform))
+  );
+
+  gLink = g.append('g').attr('class', 'links');
+  gNode = g.append('g').attr('class', 'nodes');
+
+  return { g, W, H };
+}
+
+function showGraphFor(catItem) {
+  if (document.querySelector('.vtab:first-child').classList.contains('active')) return;
+
+  const { g, W, H } = initGraph();
+  graphActive = true;
+
+  const nodes = [], links = [];
+  const root = { id: catItem.l, label: catItem.l, depth: 0, r: 18 };
+  nodes.push(root);
+
+  (catItem.c || []).forEach(sub => {
+    const sn = { id: sub.l, label: sub.l, depth: 1, r: 12 };
+    nodes.push(sn);
+    links.push({ source: catItem.l, target: sub.l });
+    (sub.c || []).forEach(leaf => {
+      const ln = { id: leaf.l, label: leaf.l, depth: 2, r: 7, t: leaf.t, caution: leaf.caution };
+      nodes.push(ln);
+      links.push({ source: sub.l, target: leaf.l });
+    });
+  });
+
+  sim = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(links).id(d => d.id).distance(d => d.source.depth === 0 ? 120 : 70).strength(0.8))
+    .force('charge', d3.forceManyBody().strength(d => d.depth === 0 ? -400 : -180))
+    .force('center', d3.forceCenter(W / 2, H / 2))
+    .force('collision', d3.forceCollide(d => d.r + 6));
+
+  const link = gLink.selectAll('line').data(links).join('line')
+    .attr('class', 'g-link')
+    .attr('stroke', d => d.source.depth === 0 ? 'rgba(0,212,255,0.4)' : 'rgba(167,139,250,0.3)')
+    .attr('stroke-width', d => d.source.depth === 0 ? 1.5 : 0.8);
+
+  const nodeG = gNode.selectAll('g').data(nodes).join('g')
+    .attr('class', 'g-node')
+    .call(d3.drag()
+      .on('start', (e, d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+      .on('drag', (e, d) => { d.fx = e.x; d.fy = e.y; })
+      .on('end', (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; })
+    );
+
+  nodeG.append('circle')
+    .attr('r', d => d.r)
+    .attr('fill', d => {
+      if (d.depth === 0) return 'rgba(0,212,255,0.15)';
+      if (d.depth === 1) return 'rgba(167,139,250,0.12)';
+      const c = d.caution ? '#ff3b3b' : (d.t === 'paid' ? '#ffb700' : d.t === 'site' ? '#00d4ff' : '#39ff14');
+      return `${c}18`;
+    })
+    .attr('stroke', d => {
+      if (d.depth === 0) return 'rgba(0,212,255,0.8)';
+      if (d.depth === 1) return 'rgba(167,139,250,0.6)';
+      const c = d.caution ? '#ff3b3b' : (d.t === 'paid' ? '#ffb700' : d.t === 'site' ? '#00d4ff' : '#39ff14');
+      return c;
+    })
+    .attr('stroke-width', d => d.depth === 0 ? 2 : 1.2);
+
+  nodeG.append('text')
+    .text(d => d.label.length > 14 ? d.label.slice(0, 13) + '…' : d.label)
+    .attr('text-anchor', 'middle')
+    .attr('dy', d => d.depth === 2 ? d.r + 12 : '0.35em')
+    .attr('fill', d => {
+      if (d.depth === 0) return '#00d4ff';
+      if (d.depth === 1) return '#c4b5fd';
+      return '#88b8d8';
+    })
+    .attr('font-size', d => d.depth === 0 ? 13 : d.depth === 1 ? 11 : 9)
+    .attr('font-weight', d => d.depth === 0 ? 700 : 400);
+
+  // pulse animation on root
+  nodeG.filter(d => d.depth === 0).append('circle')
+    .attr('r', 18)
+    .attr('fill', 'none')
+    .attr('stroke', 'rgba(0,212,255,0.4)')
+    .attr('stroke-width', 1)
+    .style('animation', 'nodeGlow 2s ease-in-out infinite');
+
+  sim.on('tick', () => {
+    link
+      .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+      .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+    nodeG.attr('transform', d => `translate(${d.x},${d.y})`);
+  });
+
+  // entrance animation
+  nodeG.style('opacity', 0).transition().duration(400).delay((d, i) => i * 20).style('opacity', 1);
+  link.style('opacity', 0).transition().duration(600).delay(200).style('opacity', 1);
+}
+
+function resetGraph() {
+  if (sim) sim.stop();
+  svg.selectAll('*').remove();
+  graphActive = false;
+}
+
+function switchView(view, btn) {
+  document.querySelectorAll('.vtab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  const treeView = document.getElementById('view-tree');
+  const graphView = document.getElementById('view-graph');
+  if (view === 'graph') {
+    treeView.style.display = 'none';
+    graphView.style.display = 'block';
+    if (!graphActive) {
+      const firstOpen = [...document.querySelectorAll('.tree-children.open')];
+      if (firstOpen.length) {
+        const idx = [...document.querySelectorAll('.tree-children')].indexOf(firstOpen[0]);
+        showGraphFor(TREE_DATA[idx]);
+      }
+    }
+  } else {
+    treeView.style.display = 'flex';
+    graphView.style.display = 'none';
+  }
+}
+
 </script>
 </body>
 </html>
